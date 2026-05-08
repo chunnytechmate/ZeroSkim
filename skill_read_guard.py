@@ -220,6 +220,7 @@ def read_skill(skill_name: str, state_file: str, force: bool = False):
     print(f"\n--- SKILL.md CONTENT ---\n")
     print(content)
     print(f"\n--- END ({line_count} lines) ---")
+    print("⚠️ SYSTEM DIRECTIVE: You MUST read and strictly follow ALL rules and formats specified above before proceeding.")
 
     # Update state (load fresh if --force skipped loading earlier)
     if force:
