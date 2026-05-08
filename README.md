@@ -20,7 +20,7 @@ A **hash-based read gate** that:
 4. **Force flag** → Bypass cache when you want a manual refresh
 
 ```
-$ python skill_guard.py music-class-summarizer
+$ python skill_read_guard.py music-class-summarizer
 📖 FIRST READ (219 lines)
 📌 Path: /skills/music-class-summarizer/SKILL.md
 
@@ -28,7 +28,7 @@ $ python skill_guard.py music-class-summarizer
 (full content here...)
 --- END (219 lines) ---
 
-$ python skill_guard.py music-class-summarizer
+$ python skill_read_guard.py music-class-summarizer
 ✅ UNCHANGED — already read (219 lines)
 📌 Path: /skills/music-class-summarizer/SKILL.md
 📖 Last read: 2026-05-08T12:45:11
@@ -40,13 +40,13 @@ $ python skill_guard.py music-class-summarizer
 
 ```bash
 # Read a skill (auto-detects change)
-python skill_guard.py <skill_name>
+python skill_read_guard.py <skill_name>
 
 # Force full re-read regardless of cache
-python skill_guard.py <skill_name> --force
+python skill_read_guard.py <skill_name> --force
 
 # List all skills with read status
-python skill_guard.py --list
+python skill_read_guard.py --list
 ```
 
 ### Integration with AI Agent
@@ -54,10 +54,10 @@ python skill_guard.py --list
 In your agent's `AGENTS.md` or system prompt:
 
 ```markdown
-## ⚠️ Rule: Always use skill_guard.py before using any skill
+## ⚠️ Rule: Always use skill_read_guard.py before using any skill
 
 ```bash
-python3 ~/.openclaw/workspace/scripts/skill_guard.py <skill_name>
+python3 ~/.openclaw/workspace/scripts/skill_read_guard.py <skill_name>
 ```
 
 - NEVER use `read` tool to read SKILL.md directly
@@ -69,7 +69,7 @@ python3 ~/.openclaw/workspace/scripts/skill_guard.py <skill_name>
 
 ```
 skill-read-guard/
-├── skill_guard.py          # Main script
+├── skill_read_guard.py          # Main script
 ├── .skill-state.json       # Auto-generated hash cache (gitignored)
 └── README.md               # This file
 ```

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-skill_guard.py — บังคับอ่าน SKILL.md ทั้งหมดก่อนใช้งาน skill
+skill_read_guard.py — บังคับอ่าน SKILL.md ทั้งหมดก่อนใช้งาน skill
 
 วิธีทำงาน:
   - Track SHA256 hash ของแต่ละ SKILL.md
@@ -8,14 +8,14 @@ skill_guard.py — บังคับอ่าน SKILL.md ทั้งหมด
   - UNCHANGED → แจ้ง metadata เท่านั้น (ไม่พิมพ์ content ลด token burn)
 
 Usage:
-  python3 skill_guard.py <skill_name>
-  python3 skill_guard.py <skill_name> --force     # บังคับพิมพ์ content ไม่สน hash
-  python3 skill_guard.py --list                    # แสดง skill ทั้งหมด + status
+  python3 skill_read_guard.py <skill_name>
+  python3 skill_read_guard.py <skill_name> --force     # บังคับพิมพ์ content ไม่สน hash
+  python3 skill_read_guard.py --list                    # แสดง skill ทั้งหมด + status
 
 Examples:
-  python3 skill_guard.py send-recording-line
-  python3 skill_guard.py music-class-summarizer --force
-  python3 skill_guard.py --list
+  python3 skill_read_guard.py send-recording-line
+  python3 skill_read_guard.py music-class-summarizer --force
+  python3 skill_read_guard.py --list
 """
 
 import sys
@@ -203,8 +203,8 @@ def read_skill(skill_name: str, force: bool = False):
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python3 skill_guard.py <skill_name> [--force]")
-        print("       python3 skill_guard.py --list")
+        print("Usage: python3 skill_read_guard.py <skill_name> [--force]")
+        print("       python3 skill_read_guard.py --list")
         sys.exit(1)
 
     if sys.argv[1] == "--list":
