@@ -14,12 +14,11 @@ AI agents that use skill-based architectures (OpenClaw, Claude, GPT, etc.) face 
 - **Read nothing** → Miss critical details — wrong parameters, skipped steps, broken workflows.
 - **Read everything** → Burn thousands of tokens re-reading files that haven't changed.
 - **Partial reads** → Even worse — silent failures from incomplete context.
+- **Fake memory** → Agent claims it remembers the rules, but its memory was just wiped (hallucination).
 
 When you have dozens of skills with 200+ line manuals each, the token cost adds up fast.
 
-## The Solution
-
-LazyGuard provides **two layers of protection**:
+## The Solution — 2-Layer Protection
 
 ### Layer 1: Soft Gate (Agent Discipline)
 
@@ -33,22 +32,16 @@ LazyGuard provides **two layers of protection**:
 
 ### Layer 2: Hard Gate (Script Enforcement)
 
-If the agent skips lazyguard and tries to run a skill script directly, the script **blocks execution**:
-
-```python
-# At the top of every skill script:
-from lazyguard_gate import require_lazyguard
-require_lazyguard("send-recording-line")
-```
+If the agent skips LazyGuard and tries to run a skill script directly, the script **blocks execution**:
 
 ```
-❌ SKILL GUARD NOT RUN: lazyguard.py has never been called for 'send-recording-line'
-   → Run: python3 ~/.openclaw/workspace/scripts/lazyguard.py send-recording-line
+❌ LAZYGUARD BLOCK: Skill not found in read-cache. Run lazyguard first.
+ → Run: python3 lazyguard.py send-recording-line
 ```
 
 **Why both layers?**
 - Layer 1 depends on the agent reading `AGENTS.md` — if the agent is lazy and skips it, Layer 1 is bypassed.
-- Layer 2 is a hard block inside the script itself — even if the agent skips everything, it **cannot run the skill** without lazyguard.
+- Layer 2 is a hard block inside the script itself — even if the agent skips everything, it **cannot run the skill** without LazyGuard.
 
 ## Quick Start
 
@@ -88,9 +81,83 @@ python3 lazyguard.py <skill_name> --session <session_id>
 python3 lazyguard.py --list
 ```
 
+---
+
+## Installation & Setup
+
+### 1. The Main Script
+
+Place `lazyguard.py` in your agent's workspace (e.g., `~/.openclaw/workspace/scripts/`).
+
+### 2. The Hard Gate Enforcement
+
+Create a file named `lazyguard_gate.py` in the same directory. This script ensures the agent's memory is fresh (within 5 minutes).
+
+```python
+import os
+import sys
+import json
+import re
+from datetime import datetime, timedelta
+
+BASE_STATE_DIR = os.environ.get(
+    "OPENCLAW_STATE_DIR",
+    os.path.expanduser("~/.openclaw/workspace")
+)
+MAX_AGE_MINUTES = 5
+
+def require_lazyguard(skill_name: str, session_id: str | None = None):
+    """Enforce that LazyGuard was called within the last 5 minutes."""
+    if session_id:
+        safe_id = re.sub(r'[^a-zA-Z0-9_-]', '', session_id) or "default"
+        state_file = os.path.join(BASE_STATE_DIR, f".lazyguard-state-session-{safe_id}.json")
+    else:
+        state_file = os.path.join(BASE_STATE_DIR, ".lazyguard-state.json")
+
+    if not os.path.isfile(state_file):
+        _abort(skill_name, "No LazyGuard state found for this session.")
+
+    try:
+        with open(state_file, "r", encoding="utf-8") as f:
+            state = json.load(f)
+    except:
+        _abort(skill_name, "State file corrupt.")
+
+    if skill_name not in state:
+        _abort(skill_name, "Skill not found in read-cache. Run lazyguard first.")
+
+    entry = state[skill_name]
+    last_read = datetime.fromisoformat(entry.get("last_read", "1970-01-01T00:00:00"))
+    age = datetime.now() - last_read
+
+    if age > timedelta(minutes=MAX_AGE_MINUTES):
+        _abort(skill_name, f"Read-cache EXPIRED ({int(age.total_seconds()/60)} mins ago).")
+
+    print(f"✅ LazyGuard OK: '{skill_name}' active ({int(age.total_seconds())}s ago).")
+
+def _abort(skill, reason):
+    print(f"❌ LAZYGUARD BLOCK: {reason}\n → Run: python3 lazyguard.py {skill}")
+    sys.exit(1)
+```
+
+### 3. Protecting Your Skills
+
+Add this to the top of every skill script:
+
+```python
+import sys, os
+sys.path.insert(0, os.path.expanduser("~/.openclaw/workspace/scripts"))
+from lazyguard_gate import require_lazyguard
+
+# This will block execution if LazyGuard hasn't been run recently
+require_lazyguard("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION_ID"))
+```
+
+---
+
 ## 🚀 One-Prompt Install for AI Agents
 
-Copy this prompt and paste it into your AI agent's system prompt, `AGENTS.md`, or equivalent:
+Copy this to your `AGENTS.md` or System Prompt:
 
 ```markdown
 ## ⚠️ LazyGuard — Mandatory Skill Read System
@@ -99,37 +166,20 @@ You MUST follow these rules. No exceptions.
 
 ### Rule 1: Always use lazyguard.py before using any skill
 Before using ANY skill, always run:
-  python3 ~/.openclaw/workspace/scripts/lazyguard.py <skill_name>
+  python3 ~/.openclaw/workspace/scripts/lazyguard.py <skill_name> [--session <id>]
 
-- NEVER read SKILL.md directly with the `read` tool — always go through lazyguard.py
-- If the output includes full content, read it carefully before proceeding
-- If the output says UNCHANGED, you already have the context in this session
+- NEVER read SKILL.md directly with the `read` tool — always go through lazyguard.py.
+- If the output includes full content, read it carefully before proceeding.
+- If the output says UNCHANGED, you already have the context in this session.
 
-### Rule 2: What lazyguard.py does
-- First time: prints full SKILL.md content + saves hash
-- Unchanged: prints 5-line summary only (saves tokens)
-- Changed: prints full content again + updates hash
-- Use --force to force re-read, --session <id> for session isolation
+### Rule 2: The 5-Minute Enforcement
+You must have called LazyGuard within the last 5 minutes to run a skill. If you wait too long, the script will BLOCK you. Re-run LazyGuard to refresh your context.
 
-### Rule 3: If you skip lazyguard, scripts will block you
-Every skill script has a hard check at the top:
-  from lazyguard_gate import require_lazyguard
-  require_lazyguard("<skill_name>")
-
-If you try to run a skill without lazyguard, the script will exit with an error.
-There is NO way around this. Run lazyguard first. Always.
+### Rule 3: No Bypassing
+Skill scripts will hard-block execution if Rule 1 and Rule 2 are not met. Run lazyguard first. Always.
 ```
 
-### Adding Hard Gate to Your Skill Scripts
-
-Add this to the top of every skill script:
-
-```python
-import sys, os
-sys.path.insert(0, os.path.expanduser("~/.openclaw/workspace/scripts"))
-from lazyguard_gate import require_lazyguard
-require_lazyguard("your-skill-name")
-```
+---
 
 ## How It Works
 
@@ -144,23 +194,22 @@ require_lazyguard("your-skill-name")
 | Corrupt state file | Auto-recover — starts fresh |
 | Skill file not found | Print error, exit with code 1 |
 
-### Safety Features
+### Safety & Auto-Maintenance
 
-- **Session-aware cache** — prevents hallucination when agent starts a new session with empty memory
-- **Atomic writes** — state file uses `os.replace()` to prevent corruption on crash
-- **Corrupt recovery** — invalid JSON in the state file is handled gracefully (resets to empty)
-- **Path traversal protection** — session ID is sanitized to `[a-zA-Z0-9_-]` only
-- **Garbage collection** — auto-removes session state files older than 7 days
-- **Robust error handling** — permission errors, encoding issues, and missing files all produce clear error messages
-- **Flexible path resolution** — searches multiple skill directories and supports both `-` and `_` naming conventions
+- **SHA256 Fingerprinting** — Automatically detects any changes in your SKILL.md files.
+- **Session-aware Cache** — Prevents hallucination after a chat clear by isolating context per session.
+- **Auto Garbage Collection (GC)** — Removes session state files older than 7 days automatically.
+- **Atomic Writes** — Prevents state file corruption during crashes using `os.replace()`.
+- **Path Traversal Protection** — Sanitizes session IDs to `[a-zA-Z0-9_-]` only.
 
 ### File Structure
 
 ```
 LazyGuard/
-├── lazyguard.py               # Main script
-├── .lazyguard-state.json      # Global hash cache (gitignored)
-├── .lazyguard-state-session-<id>.json  # Per-session cache (gitignored, auto-GC)
+├── lazyguard.py                          # Main script
+├── lazyguard_gate.py                     # Hard gate enforcement (import in skill scripts)
+├── .lazyguard-state.json                 # Global hash cache (gitignored)
+├── .lazyguard-state-session-<id>.json    # Per-session cache (gitignored, auto-GC)
 └── README.md
 ```
 
@@ -182,7 +231,7 @@ LazyGuard/
                  │
                  ▼
   ┌──────────────────────────────────┐
-  │       lazyguard.py               │
+  │         lazyguard.py             │
   │  - Check hash cache              │
   │  - Print content if FRESH/CHANGED│
   │  - Print summary if UNCHANGED    │
@@ -190,9 +239,9 @@ LazyGuard/
                  │
                  ▼
   ┌──────────────────────────────────┐
-  │   skill script (Layer 2: Hard)   │
-  │   require_lazyguard() ← BLOCKS  │
-  │   if lazyguard not run           │
+  │  skill script (Layer 2: Hard)    │
+  │  require_lazyguard() ← BLOCKS    │
+  │  if not read in < 5 minutes      │
   └──────────────────────────────────┘
 ```
 
@@ -202,114 +251,57 @@ MIT
 
 ---
 
-# LazyGuard (ภาษาไทย)
+# 🇹🇭 LazyGuard (ภาษาไทย)
 
-**ผู้เฝ้าประตูเข้มงวดที่บังคับให้ AI agent อ่านและแคช SKILL.md ให้ครบก่อนทำงาน — ป้องกันข้อผิดพลาดที่แพงในระบบ production**
+**ผู้คุมกฎสุดเข้มงวดที่ดัดนิสัย AI agent ขี้เกียจ บังคับให้อ่านกฎ (SKILL.md) ให้จบก่อนเริ่มงาน — ป้องกันข้อผิดพลาดที่ราคาแพงในระบบ Production**
 
 ## ปัญหา
 
-AI agent ที่ใช้ระบบ skill (เช่น OpenClaw, Claude, GPT) จะเจอปัญหาเดิมทุกครั้งที่เริ่ม session ใหม่:
+AI agent มักจะเจอปัญหาเดิมๆ ทุกครั้งที่เริ่ม session ใหม่:
 
-- **ไม่อ่านเลย** → พลาดรายละเอียดสำคัญ — ใช้ parameter ผิด, ข้าม step, ผลลัพธ์พัง
-- **อ่านหมดทุกอย่าง** → เสีย token เป็นพันๆ กับไฟล์ที่ไม่ได้เปลี่ยน
-- **อ่านไม่ครบ** → แย่กว่าเดิม — error เงียบจาก context ไม่ครบ
+- **ไม่อ่านกฎเลย** → พลาดรายละเอียดสำคัญ, ใส่ parameter ผิด, ข้ามขั้นตอน
+- **อ่านหมดทุกอย่างซ้ำๆ** → เสีย Token มหาศาลไปกับไฟล์ที่ไม่ได้เปลี่ยน
+- **แกล้งจำได้** → เกิดอาการ AI "หลอน" (Hallucination) ว่าจำกฎได้ทั้งที่เพิ่งล้างความจำ
 
-## วิธีแก้ — 2 ชั้นป้องกัน
+## วิธีแก้ — ระบบป้องกัน 2 ชั้น
 
-### ชั้นที่ 1: Soft Gate (วินัย Agent)
+### ชั้นที่ 1: Soft Gate (สร้างวินัย)
 
-`lazyguard.py` ทำหน้าที่เป็น smart cache ระหว่าง agent กับไฟล์ skill:
+`lazyguard.py` ทำหน้าที่เป็นแคชอัจฉริยะ:
 
-1. **อ่านครั้งแรก** → พิมพ์เนื้อหาเต็ม + บันทึก SHA256 fingerprint
-2. **ไฟล์ไม่เปลี่ยน** → พิมพ์แค่ metadata 5 บรรทัด — **ประหยัด token ~97%**
-3. **ไฟล์เปลี่ยน** → พิมพ์เนื้อหาเต็มอีกครั้ง + อัปเดต fingerprint
-4. **Session-aware** (`--session <id>`) → แยก cache ตาม session ป้องกัน hallucination หลัง clear chat
-5. **Force flag** (`--force`) → พิมพ์เนื้อหาเต็มเสมอ ไม่สน cache
+- **รันครั้งแรก**: พิมพ์เนื้อหาเต็ม + บันทึก SHA256 Hash
+- **ไฟล์ไม่เปลี่ยน**: พิมพ์สรุป 5 บรรทัด (ประหยัด Token ~97%)
+- **แยกตาม Session**: ป้องกันการสับสนระหว่างแชทเก่าและแชทใหม่
 
-### ชั้นที่ 2: Hard Gate (บล็อกใน Script)
+### ชั้นที่ 2: Hard Gate (บล็อกในโค้ด)
 
-ถ้า agent ขี้เกียจอ่าน AGENTS.md แล้วข้าม lazyguard ไปเลย → script **บล็อกการทำงาน**:
+ใช้ `lazyguard_gate.py` ใส่ไว้ในทุก Skill Script:
 
-```python
-# อยู่ข้างบนทุก skill script:
-from lazyguard_gate import require_lazyguard
-require_lazyguard("send-recording-line")
-```
+- **กฎ 5 นาที**: AI จะต้องรัน LazyGuard มาไม่เกิน 5 นาทีก่อนรันงานจริง มิฉะนั้นสคริปต์จะ **บล็อกการทำงานทันที**
+- **บังคับวินัย**: ไม่มีทางลัด AI ต้องผ่านด่านตรวจก่อนเสมอ
 
-```
-❌ SKILL GUARD NOT RUN: lazyguard.py has never been called for 'send-recording-line'
-   → Run: python3 ~/.openclaw/workspace/scripts/lazyguard.py send-recording-line
-```
+## การติดตั้ง
 
-**ทำไมต้อง 2 ชั้น?**
-- ชั้น 1 พึ่ง agent อ่าน AGENTS.md — ถ้าขี้เกียจอ่าน ก็ข้ามได้
-- ชั้น 2 บล็อกใน script — **ไม่มีทางข้ามได้** ถ้าไม่รัน lazyguard ก่อน
+### 1. วาง `lazyguard.py` ใน workspace ของ agent
 
-## 🚀 One-Prompt Install (ภาษาไทย)
+### 2. วาง `lazyguard_gate.py` ใน directory เดียวกัน
 
-คัดลอก prompt นี้ไปใส่ใน system prompt หรือ `AGENTS.md` ของ agent:
-
-```markdown
-## ⚠️ LazyGuard — ระบบบังคับอ่าน Skill
-
-ต้องทำตามกฎนี้ทุกครั้ง ไม่มีข้อยกเว้น
-
-### กฎ 1: ก่อนใช้ skill ใดๆ ต้องรัน lazyguard.py ก่อนเสมอ
-  python3 ~/.openclaw/workspace/scripts/lazyguard.py <ชื่อ_skill>
-
-- ห้ามอ่าน SKILL.md โดยตรง — ต้องผ่าน lazyguard.py เท่านั้น
-- ถ้า output มีเนื้อหา → อ่านให้ครบก่อนดำเนินการ
-- ถ้า output บอก UNCHANGED → ใช้ context จาก session นี้ได้เลย
-
-### กฎ 2: lazyguard.py ทำอะไร
-- ครั้งแรก: พิมพ์ SKILL.md เต็ม + บันทึก hash
-- ไม่เปลี่ยน: พิมพ์แค่ 5 บรรทัด (ประหยัด token)
-- เปลี่ยน: พิมพ์เต็มใหม่ + อัปเดต hash
-- ใช้ --force เพื่อบังคับอ่านใหม่, --session <id> แยก session
-
-### กฎ 3: ถ้าข้าม lazyguard จะถูกบล็อก
-ทุก skill script มี hard check ข้างบน:
-  from lazyguard_gate import require_lazyguard
-  require_lazyguard("<skill_name>")
-
-ถ้ารันโดยไม่ผ่าน lazyguard → script จะ error และไม่ทำงาน
-**ไม่มีทางข้ามได้** — ต้องรัน lazyguard ก่อนทุกครั้ง
-```
-
-### เพิ่ม Hard Gate ใน Skill Script ของคุณ
-
-เพิ่มนี้ไว้ข้างบนสุดของทุก skill script:
+### 3. เพิ่มที่ด้านบนของทุก skill script:
 
 ```python
 import sys, os
 sys.path.insert(0, os.path.expanduser("~/.openclaw/workspace/scripts"))
 from lazyguard_gate import require_lazyguard
-require_lazyguard("your-skill-name")
+
+require_lazyguard("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION_ID"))
 ```
 
-## การใช้งาน
+## ฟีเจอร์เด่น
 
-```bash
-# อ่าน skill (ตรวจอัตโนมัติว่าเนื้อหาเปลี่ยนหรือไม่)
-python3 lazyguard.py <ชื่อ_skill>
-
-# บังคับอ่านเต็ม ไม่สน cache
-python3 lazyguard.py <ชื่อ_skill> --force
-
-# แยก cache ตาม session (ป้องกัน hallucination)
-python3 lazyguard.py <ชื่อ_skill> --session <session_id>
-
-# แสดง skill ทั้งหมด + สถานะการอ่าน
-python3 lazyguard.py --list
-```
-
-## ความปลอดภัย
-
-- **Session-aware** — แยก cache ตาม session ป้องกัน hallucination หลัง clear chat
-- **Atomic writes** — ใช้ `os.replace()` ป้องกัน state file เสียหายเมื่อระบบ crash
-- **Path traversal protection** — sanitize session ID เฉพาะ `[a-zA-Z0-9_-]`
-- **Garbage collection** — ลบ session state files เก่าเกิน 7 วันอัตโนมัติ
-- **กู้คืนจาก state เสีย** — JSON ไม่ valid จะ reset เป็นค่าว่างโดยอัตโนมัติ
+- **SHA256 Fingerprinting**: ตรวจพบทุกความเปลี่ยนแปลงในไฟล์กฎของคุณ
+- **Garbage Collection (GC)**: ลบไฟล์แคชเก่า (เกิน 7 วัน) ให้อัตโนมัติ
+- **ปลอดภัย**: ป้องกัน Path Traversal และไฟล์พังด้วย Atomic Writes
+- **Session-aware**: แยก cache ตาม session ป้องกัน hallucination หลัง clear chat
 
 ## ความต้องการ
 
@@ -322,4 +314,4 @@ MIT
 
 ---
 
-_สร้างสำหรับ [OpenClaw](https://github.com/nicepkg/openclaw) แต่ใช้ได้กับทุกระบบ AI agent ที่ใช้ไฟล์ skill manifest_
+_Created by [Chunny](https://github.com/chunnytechmate) | Built for AI Agents & [OpenClaw](https://github.com/nicepkg/openclaw)_
