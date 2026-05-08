@@ -1,9 +1,21 @@
-# LazyGuard
+# 🛡 LazyGuard
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
+![Category: AI Agents](https://img.shields.io/badge/Category-AI_Agents-purple.svg)
 
 **A strict gatekeeper that forces lazy AI agents to fully read and cache SKILL.md before execution — preventing costly mistakes in production AI systems.**
+
+---
+
+## 📑 Table of Contents
+- [The Problem](#the-problem)
+- [The Solution (2-Layer Gate)](#the-solution--2-layer-protection)
+- [Installation & Setup](#installation--setup)
+- [One-Prompt Install for AI Agents](#-one-prompt-install-for-ai-agents)
+- [Quick Start & Usage](#quick-start--usage)
+- [How It Works](#how-it-works)
+- [🇹🇭 LazyGuard (ภาษาไทย)](#-lazyguard-ภาษาไทย)
 
 ---
 
@@ -24,66 +36,24 @@ When you have dozens of skills with 200+ line manuals each, the token cost adds 
 
 `lazyguard.py` acts as a smart cache between your agent and its skill files:
 
-1. **First read** → Outputs the full file content and records a SHA256 fingerprint.
-2. **File unchanged** → Outputs only a 5-line metadata summary — **~97% fewer tokens**.
-3. **File changed** → Outputs the full content again and updates the fingerprint.
-4. **Session-aware** (`--session <id>`) → Separate cache per session, prevents hallucination after chat clear.
-5. **Force flag** (`--force`) → Always outputs full content, ignoring the cache.
+1. **First read** → Outputs full file content + records SHA256 fingerprint.
+2. **File unchanged** → Outputs a 5-line metadata summary (**~97% fewer tokens**).
+3. **Session-aware** → Separate cache per session, prevents hallucination after chat clear.
 
 ### Layer 2: Hard Gate (Script Enforcement)
 
-If the agent skips LazyGuard and tries to run a skill script directly, the script **blocks execution**:
+If the agent skips LazyGuard, the script blocks execution:
 
 ```
 ❌ LAZYGUARD BLOCK: Skill not found in read-cache. Run lazyguard first.
- → Run: python3 lazyguard.py send-recording-line
-```
-
-**Why both layers?**
-- Layer 1 depends on the agent reading `AGENTS.md` — if the agent is lazy and skips it, Layer 1 is bypassed.
-- Layer 2 is a hard block inside the script itself — even if the agent skips everything, it **cannot run the skill** without LazyGuard.
-
-## Quick Start
-
-```
-$ python3 lazyguard.py music-class-summarizer
-📖 FIRST READ (219 lines)
-📌 Path: /skills/music-class-summarizer/SKILL.md
-
---- SKILL.md CONTENT ---
-(full content here...)
---- END (219 lines) ---
-⚠️ SYSTEM DIRECTIVE: You MUST read and strictly follow ALL rules and formats specified above before proceeding.
-```
-
-```
-$ python3 lazyguard.py music-class-summarizer
-✅ UNCHANGED — already read (219 lines)
-📌 Path: /skills/music-class-summarizer/SKILL.md
-📖 Last read: 2026-05-08T12:45:11
-🔑 Hash: f74e5050ca0cbc8a...
-📌 Action: No re-read needed — use session memory
-```
-
-## Usage
-
-```bash
-# Read a skill (auto-detects if content has changed)
-python3 lazyguard.py <skill_name>
-
-# Force a full re-read regardless of cache
-python3 lazyguard.py <skill_name> --force
-
-# Session-aware cache (prevents hallucination after chat clear)
-python3 lazyguard.py <skill_name> --session <session_id>
-
-# List all discovered skills and their read status
-python3 lazyguard.py --list
+   → Run: python3 lazyguard.py send-recording-line
 ```
 
 ---
 
 ## Installation & Setup
+
+**Requirements:** Python 3.10+ (Standard library only).
 
 ### 1. The Main Script
 
@@ -91,13 +61,11 @@ Place `lazyguard.py` in your agent's workspace (e.g., `~/.openclaw/workspace/scr
 
 ### 2. The Hard Gate Enforcement
 
-Place `lazyguard_gate.py` (included in this repo) in the same directory as `lazyguard.py`.
-
-This script enforces a **5-minute rule**: the agent must have called LazyGuard within the last 5 minutes to run a skill. If the cache is stale or missing, the script **blocks execution immediately**.
+Place `lazyguard_gate.py` (included in this repo) in the same directory. This enforces a **5-minute rule**: the agent must have called LazyGuard within the last 5 minutes to run a skill.
 
 ### 3. Protecting Your Skills
 
-Add this to the top of every skill script:
+Add this snippet to the top of every skill script you want to protect:
 
 ```python
 import sys, os
@@ -106,7 +74,7 @@ if scripts_dir not in sys.path:
     sys.path.insert(0, scripts_dir)
 from lazyguard_gate import require_lazyguard
 
-# This will block execution if LazyGuard hasn't been run recently
+# Blocks execution if LazyGuard hasn't been run recently
 require_lazyguard("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION_ID"))
 ```
 
@@ -114,7 +82,7 @@ require_lazyguard("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION
 
 ## 🚀 One-Prompt Install for AI Agents
 
-Copy this to your `AGENTS.md` or System Prompt:
+Copy this to your `AGENTS.md` or System Prompt to discipline your agent:
 
 ```markdown
 ## ⚠️ LazyGuard — Mandatory Skill Read System
@@ -138,69 +106,56 @@ Skill scripts will hard-block execution if Rule 1 and Rule 2 are not met. Run la
 
 ---
 
+## Quick Start & Usage
+
+**Command Line Usage:**
+
+```bash
+# Read a skill (auto-detects if content has changed)
+python3 lazyguard.py <skill_name>
+
+# Force a full re-read regardless of cache
+python3 lazyguard.py <skill_name> --force
+
+# Session-aware cache (prevents hallucination after chat clear)
+python3 lazyguard.py <skill_name> --session <session_id>
+
+# List all discovered skills and their read status
+python3 lazyguard.py --list
+```
+
+**Example Output:**
+
+```
+$ python3 lazyguard.py music-class-summarizer
+✅ UNCHANGED — already read (219 lines)
+📌 Path: /skills/music-class-summarizer/SKILL.md
+📖 Last read: 2026-05-08T12:45:11
+🔑 Hash: f74e5050ca0cbc8a...
+📌 Action: ALREADY IN CONTEXT — Proceed with task.
+```
+
+---
+
 ## How It Works
 
 | Scenario | Behavior |
 |----------|----------|
 | First read ever | Print full content + save hash |
-| File unchanged since last read | Print 5-line summary only |
-| File modified since last read | Print full content + update hash |
-| `--force` flag | Always print full content |
+| File unchanged | Print 5-line summary only |
+| File modified | Print full content + update hash |
 | `--session <id>` | Separate state file per session |
-| New session (no cache) | Print full content (first read) |
+| New session | Print full content (first read) |
 | Corrupt state file | Auto-recover — starts fresh |
-| Skill file not found | Print error, exit with code 1 |
 
 ### Safety & Auto-Maintenance
 
-- **SHA256 Fingerprinting** — Automatically detects any changes in your SKILL.md files.
-- **Session-aware Cache** — Prevents hallucination after a chat clear by isolating context per session.
-- **Auto Garbage Collection (GC)** — Removes session state files older than 7 days automatically.
-- **Atomic Writes** — Prevents state file corruption during crashes using `os.replace()`.
-- **Path Traversal Protection** — Sanitizes session IDs to `[a-zA-Z0-9_-]` only.
+- **SHA256 Fingerprinting**: Automatically detects any changes in your SKILL.md.
+- **Auto Garbage Collection (GC)**: Removes session state files older than 7 days.
+- **Atomic Writes**: Prevents state file corruption using `os.replace()`.
+- **Path Traversal Protection**: Sanitizes session IDs to `[a-zA-Z0-9_-]` only.
 
-### File Structure
-
-```
-LazyGuard/
-├── lazyguard.py                          # Main script
-├── lazyguard_gate.py                     # Hard gate enforcement (import in skill scripts)
-├── .lazyguard-state.json                 # Global hash cache (gitignored)
-├── .lazyguard-state-session-<id>.json    # Per-session cache (gitignored, auto-GC)
-└── README.md
-```
-
-## Requirements
-
-- **Python 3.10+** (uses `str | None` union syntax)
-- **No external dependencies** — standard library only
-
-## Architecture Diagram
-
-```
-  AI Agent
-     │
-     ▼
-  ┌──────────────────────────────────┐
-  │  AGENTS.md (Layer 1: Soft Gate)  │
-  │  "Run lazyguard.py before skill" │
-  └──────────────┬───────────────────┘
-                 │
-                 ▼
-  ┌──────────────────────────────────┐
-  │         lazyguard.py             │
-  │  - Check hash cache              │
-  │  - Print content if FRESH/CHANGED│
-  │  - Print summary if UNCHANGED    │
-  └──────────────┬───────────────────┘
-                 │
-                 ▼
-  ┌──────────────────────────────────┐
-  │  skill script (Layer 2: Hard)    │
-  │  require_lazyguard() ← BLOCKS    │
-  │  if not read in < 5 minutes      │
-  └──────────────────────────────────┘
-```
+---
 
 ## License
 
@@ -210,7 +165,7 @@ MIT
 
 # 🇹🇭 LazyGuard (ภาษาไทย)
 
-**ผู้คุมกฎสุดเข้มงวดที่ดัดนิสัย AI agent ขี้เกียจ บังคับให้อ่านกฎ (SKILL.md) ให้จบก่อนเริ่มงาน — ป้องกันข้อผิดพลาดที่ราคาแพงในระบบ Production**
+ผู้คุมกฎสุดเข้มงวดที่ดัดนิสัย AI agent ขี้เกียจ บังคับให้อ่านกฎ (SKILL.md) ให้จบก่อนเริ่มงาน — ป้องกันข้อผิดพลาดที่ราคาแพงในระบบ Production
 
 ## ปัญหา
 
@@ -239,31 +194,18 @@ AI agent มักจะเจอปัญหาเดิมๆ ทุกคร�
 
 ## การติดตั้ง
 
-### 1. วาง `lazyguard.py` ใน workspace ของ agent
-
-### 2. วาง `lazyguard_gate.py` ใน directory เดียวกัน
-
-### 3. เพิ่มที่ด้านบนของทุก skill script:
+1. วาง `lazyguard.py` และ `lazyguard_gate.py` ใน workspace ของ agent
+2. เพิ่มโค้ดที่ด้านบนของทุก skill script:
 
 ```python
 import sys, os
-sys.path.insert(0, os.path.expanduser("~/.openclaw/workspace/scripts"))
+scripts_dir = os.environ.get("OPENCLAW_SCRIPTS_DIR", os.path.expanduser("~/.openclaw/workspace/scripts"))
+if scripts_dir not in sys.path:
+    sys.path.insert(0, scripts_dir)
 from lazyguard_gate import require_lazyguard
 
 require_lazyguard("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION_ID"))
 ```
-
-## ฟีเจอร์เด่น
-
-- **SHA256 Fingerprinting**: ตรวจพบทุกความเปลี่ยนแปลงในไฟล์กฎของคุณ
-- **Garbage Collection (GC)**: ลบไฟล์แคชเก่า (เกิน 7 วัน) ให้อัตโนมัติ
-- **ปลอดภัย**: ป้องกัน Path Traversal และไฟล์พังด้วย Atomic Writes
-- **Session-aware**: แยก cache ตาม session ป้องกัน hallucination หลัง clear chat
-
-## ความต้องการ
-
-- **Python 3.10+**
-- **ไม่ต้องติดตั้งอะไรเพิ่ม** — ใช้แค่ standard library
 
 ## License
 
