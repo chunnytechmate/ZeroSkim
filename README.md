@@ -3,7 +3,7 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
 
-**A hash-based read gate for AI agent skill files — read once, skip re-reads, never miss changes.**
+**A strict gatekeeper that forces lazy AI agents to fully read and cache SKILL.md before execution — preventing costly mistakes in production AI systems.**
 
 ---
 
@@ -115,7 +115,7 @@ _Built for [OpenClaw](https://github.com/nicepkg/openclaw) but works with any AI
 
 # skill-read-guard (ภาษาไทย)
 
-**Hash gate สำหรับไฟล์ skill ของ AI agent — อ่านครั้งเดียว ข้ามการอ่านซ้ำ ไม่พลาดทุกการเปลี่ยนแปลง**
+**ผู้เฝ้าประตูเข้มงวดที่บังคับให้ AI agent อ่านและแคช SKILL.md ให้ครบก่อนทำงาน — ป้องกันข้อผิดพลาดที่แพงในระบบ production**
 
 ## ปัญหา
 
