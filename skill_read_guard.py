@@ -26,7 +26,9 @@ import json
 import hashlib
 import tempfile
 import argparse
-from datetime import datetime
+import re
+import glob
+from datetime import datetime, timedelta
 
 # รองรับ Environment Variable สำหรับรันใน Docker
 BASE_STATE_DIR = os.environ.get(
@@ -40,12 +42,34 @@ SKILLS_DIRS = [
 
 
 def get_state_file(session_id: str | None) -> str:
-    """คืนค่า Path ของไฟล์ State โดยแยกตาม Session ID"""
+    """คืนค่า Path ของไฟล์ State โดยแยกตาม Session ID และป้องกัน Path Traversal"""
     if session_id:
-        filename = f".skill-state-session-{session_id}.json"
+        # กรองเอาเฉพาะตัวอักษร ตัวเลข ขีดกลาง และขีดล่าง เท่านั้น
+        safe_session = re.sub(r'[^a-zA-Z0-9_-]', '', session_id)
+        if not safe_session:
+            safe_session = "default"
+        filename = f".skill-state-session-{safe_session}.json"
     else:
         filename = ".skill-state.json"
     return os.path.join(BASE_STATE_DIR, filename)
+
+
+def gc_stale_session_states(max_age_days: int = 7):
+    """ลบ session state files ที่เก่าเกิน max_age_days วัน (Garbage Collection)"""
+    if not os.path.isdir(BASE_STATE_DIR):
+        return 0
+    pattern = os.path.join(BASE_STATE_DIR, ".skill-state-session-*.json")
+    cutoff = datetime.now() - timedelta(days=max_age_days)
+    removed = 0
+    for filepath in glob.glob(pattern):
+        try:
+            mtime = datetime.fromtimestamp(os.path.getmtime(filepath))
+            if mtime < cutoff:
+                os.remove(filepath)
+                removed += 1
+        except OSError:
+            pass
+    return removed
 
 
 def find_skill_path(skill_name: str) -> str | None:
@@ -229,6 +253,11 @@ def main():
     if args.list:
         list_skills(state_file)
     else:
+        # GC: ลบ session state files เก่าๆ (เฉพาะตอนใช้งานปกติ ไม่ใช่ --list)
+        removed = gc_stale_session_states(max_age_days=7)
+        if removed:
+            print(f"🧹 GC: removed {removed} stale session state file(s)", file=sys.stderr)
+
         read_skill(args.skill_name, state_file, force=args.force)
 
 
