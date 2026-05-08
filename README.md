@@ -37,8 +37,8 @@ If the agent skips lazyguard and tries to run a skill script directly, the scrip
 
 ```python
 # At the top of every skill script:
-from skill_check import require_skill_read
-require_skill_read("send-recording-line")
+from lazyguard_gate import require_lazyguard
+require_lazyguard("send-recording-line")
 ```
 
 ```
@@ -113,8 +113,8 @@ Before using ANY skill, always run:
 
 ### Rule 3: If you skip lazyguard, scripts will block you
 Every skill script has a hard check at the top:
-  from skill_check import require_skill_read
-  require_skill_read("<skill_name>")
+  from lazyguard_gate import require_lazyguard
+  require_lazyguard("<skill_name>")
 
 If you try to run a skill without lazyguard, the script will exit with an error.
 There is NO way around this. Run lazyguard first. Always.
@@ -127,8 +127,8 @@ Add this to the top of every skill script:
 ```python
 import sys, os
 sys.path.insert(0, os.path.expanduser("~/.openclaw/workspace/scripts"))
-from skill_check import require_skill_read
-require_skill_read("your-skill-name")
+from lazyguard_gate import require_lazyguard
+require_lazyguard("your-skill-name")
 ```
 
 ## How It Works
@@ -191,7 +191,7 @@ LazyGuard/
                  ▼
   ┌──────────────────────────────────┐
   │   skill script (Layer 2: Hard)   │
-  │   require_skill_read() ← BLOCKS  │
+  │   require_lazyguard() ← BLOCKS  │
   │   if lazyguard not run           │
   └──────────────────────────────────┘
 ```
@@ -232,8 +232,8 @@ AI agent ที่ใช้ระบบ skill (เช่น OpenClaw, Claude, GP
 
 ```python
 # อยู่ข้างบนทุก skill script:
-from skill_check import require_skill_read
-require_skill_read("send-recording-line")
+from lazyguard_gate import require_lazyguard
+require_lazyguard("send-recording-line")
 ```
 
 ```
@@ -269,8 +269,8 @@ require_skill_read("send-recording-line")
 
 ### กฎ 3: ถ้าข้าม lazyguard จะถูกบล็อก
 ทุก skill script มี hard check ข้างบน:
-  from skill_check import require_skill_read
-  require_skill_read("<skill_name>")
+  from lazyguard_gate import require_lazyguard
+  require_lazyguard("<skill_name>")
 
 ถ้ารันโดยไม่ผ่าน lazyguard → script จะ error และไม่ทำงาน
 **ไม่มีทางข้ามได้** — ต้องรัน lazyguard ก่อนทุกครั้ง
@@ -283,8 +283,8 @@ require_skill_read("send-recording-line")
 ```python
 import sys, os
 sys.path.insert(0, os.path.expanduser("~/.openclaw/workspace/scripts"))
-from skill_check import require_skill_read
-require_skill_read("your-skill-name")
+from lazyguard_gate import require_lazyguard
+require_lazyguard("your-skill-name")
 ```
 
 ## การใช้งาน
