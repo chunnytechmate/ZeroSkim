@@ -12,6 +12,8 @@ __pycache__/
 *.egg-info/
 
 # State (auto-generated at runtime)
+.lazyguard-state.json
+.lazyguard-state-session-*.json
 .skill-state.json
 
 # IDE
