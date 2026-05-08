@@ -101,7 +101,9 @@ Add this to the top of every skill script:
 
 ```python
 import sys, os
-sys.path.insert(0, os.path.expanduser("~/.openclaw/workspace/scripts"))
+scripts_dir = os.environ.get("OPENCLAW_SCRIPTS_DIR", os.path.expanduser("~/.openclaw/workspace/scripts"))
+if scripts_dir not in sys.path:
+    sys.path.insert(0, scripts_dir)
 from lazyguard_gate import require_lazyguard
 
 # This will block execution if LazyGuard hasn't been run recently
@@ -121,7 +123,7 @@ You MUST follow these rules. No exceptions.
 
 ### Rule 1: Always use lazyguard.py before using any skill
 Before using ANY skill, always run:
-  python3 ~/.openclaw/workspace/scripts/lazyguard.py <skill_name> [--session <id>]
+  python3 lazyguard.py <skill_name> [--session <id>]
 
 - NEVER read SKILL.md directly with the `read` tool — always go through lazyguard.py.
 - If the output includes full content, read it carefully before proceeding.

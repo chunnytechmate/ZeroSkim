@@ -34,6 +34,7 @@ def require_lazyguard(skill_name: str, session_id: str | None = None):
         state_file = os.path.join(BASE_STATE_DIR, ".lazyguard-state.json")
 
     if not os.path.isfile(state_file):
+        # Ensure directory exists before error (clean error message on fresh systems)
         _abort(skill_name, "No LazyGuard state found for this session.")
 
     try:

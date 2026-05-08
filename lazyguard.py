@@ -204,7 +204,7 @@ def read_skill(skill_name: str, state_file: str, force: bool = False):
         print(f"📌 Path: {skill_path}")
         print(f"📖 Last read: {skill_state.get('last_read', 'unknown')}")
         print(f"🔑 Hash: {current_hash[:16]}...")
-        print(f"📌 Action: ไม่ต้องอ่านซ้ำ — ใช้ความจำ session นี้ได้เลย")
+        print(f"📌 Action: ALREADY IN CONTEXT — Proceed with task.")
         return
 
     # FRESH / CHANGED / --force → print full content
