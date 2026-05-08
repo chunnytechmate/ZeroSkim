@@ -164,7 +164,14 @@ def read_skill(skill_name: str, force: bool = False):
         last_hash = skill_state.get("hash", "")
 
         if last_hash == current_hash and last_hash:
-            # Already read and unchanged — just show metadata, skip content
+            # Already read and unchanged — update timestamp for skill_check, skip content
+            state[skill_name] = {
+                "hash": current_hash,
+                "last_read": datetime.now().isoformat(),
+                "path": skill_path,
+                "lines": line_count,
+            }
+            save_state(state)
             print(f"✅ UNCHANGED — already read ({line_count} lines)")
             print(f"📌 Path: {skill_path}")
             print(f"📖 Last read: {skill_state.get('last_read', 'unknown')}")
