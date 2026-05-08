@@ -1,4 +1,4 @@
-# skill-read-guard
+# LazyGuard
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
@@ -19,7 +19,7 @@ When you have dozens of skills with 200+ line manuals each, the token cost adds 
 
 ## The Solution
 
-`skill_read_guard.py` acts as a **smart gate** between your agent and its skill files:
+`lazyguard.py` acts as a **smart gate** between your agent and its skill files:
 
 1. **First read** → Outputs the full file content and records a SHA256 fingerprint.
 2. **File unchanged** → Outputs only a 5-line metadata summary — **~97% fewer tokens**.
@@ -27,7 +27,7 @@ When you have dozens of skills with 200+ line manuals each, the token cost adds 
 4. **Force flag** (`--force`) → Always outputs full content, ignoring the cache.
 
 ```
-$ python skill_read_guard.py music-class-summarizer
+$ python lazyguard.py music-class-summarizer
 📖 FIRST READ (219 lines)
 📌 Path: /skills/music-class-summarizer/SKILL.md
 
@@ -37,7 +37,7 @@ $ python skill_read_guard.py music-class-summarizer
 ```
 
 ```
-$ python skill_read_guard.py music-class-summarizer
+$ python lazyguard.py music-class-summarizer
 ✅ UNCHANGED — already read (219 lines)
 📌 Path: /skills/music-class-summarizer/SKILL.md
 📖 Last read: 2026-05-08T12:45:11
@@ -49,13 +49,13 @@ $ python skill_read_guard.py music-class-summarizer
 
 ```bash
 # Read a skill (auto-detects if content has changed)
-python3 skill_read_guard.py <skill_name>
+python3 lazyguard.py <skill_name>
 
 # Force a full re-read regardless of cache
-python3 skill_read_guard.py <skill_name> --force
+python3 lazyguard.py <skill_name> --force
 
 # List all discovered skills and their read status
-python3 skill_read_guard.py --list
+python3 lazyguard.py --list
 ```
 
 ### Integrating with Your Agent
@@ -64,7 +64,7 @@ Add a rule to your agent's system prompt or `AGENTS.md`:
 
 ```markdown
 Before using any skill, always run:
-  python3 ~/.openclaw/workspace/scripts/skill_read_guard.py <skill_name>
+  python3 ~/.openclaw/workspace/scripts/lazyguard.py <skill_name>
 
 - Never read SKILL.md directly — always go through this script.
 - If the output includes content, read it carefully before proceeding.
@@ -92,8 +92,8 @@ Before using any skill, always run:
 ### File Structure
 
 ```
-skill-read-guard/
-├── skill_read_guard.py     # Main script
+LazyGuard/
+├── lazyguard.py     # Main script
 ├── .skill-state.json       # Auto-generated hash cache (gitignored)
 └── README.md
 ```
@@ -113,7 +113,7 @@ _Built for [OpenClaw](https://github.com/nicepkg/openclaw) but works with any AI
 
 ---
 
-# skill-read-guard (ภาษาไทย)
+# LazyGuard (ภาษาไทย)
 
 **ผู้เฝ้าประตูเข้มงวดที่บังคับให้ AI agent อ่านและแคช SKILL.md ให้ครบก่อนทำงาน — ป้องกันข้อผิดพลาดที่แพงในระบบ production**
 
@@ -127,7 +127,7 @@ AI agent ที่ใช้ระบบ skill (เช่น OpenClaw, Claude, GP
 
 ## วิธีแก้
 
-`skill_read_guard.py` ทำหน้าที่เป็น **gate อัจฉริยะ** ระหว่าง agent กับไฟล์ skill:
+`lazyguard.py` ทำหน้าที่เป็น **gate อัจฉริยะ** ระหว่าง agent กับไฟล์ skill:
 
 1. **อ่านครั้งแรก** → พิมพ์เนื้อหาเต็ม + บันทึก SHA256 fingerprint
 2. **ไฟล์ไม่เปลี่ยน** → พิมพ์แค่ metadata 5 บรรทัด — **ประหยัด token ~97%**
@@ -138,13 +138,13 @@ AI agent ที่ใช้ระบบ skill (เช่น OpenClaw, Claude, GP
 
 ```bash
 # อ่าน skill (ตรวจอัตโนมัติว่าเนื้อหาเปลี่ยนหรือไม่)
-python3 skill_read_guard.py <ชื่อ_skill>
+python3 lazyguard.py <ชื่อ_skill>
 
 # บังคับอ่านเต็ม ไม่สน cache
-python3 skill_read_guard.py <ชื่อ_skill> --force
+python3 lazyguard.py <ชื่อ_skill> --force
 
 # แสดง skill ทั้งหมด + สถานะการอ่าน
-python3 skill_read_guard.py --list
+python3 lazyguard.py --list
 ```
 
 ### ผูกเข้ากับ Agent ของคุณ
@@ -153,7 +153,7 @@ python3 skill_read_guard.py --list
 
 ```markdown
 ก่อนใช้ skill ใดๆ ให้รันเสมอ:
-  python3 ~/.openclaw/workspace/scripts/skill_read_guard.py <ชื่อ_skill>
+  python3 ~/.openclaw/workspace/scripts/lazyguard.py <ชื่อ_skill>
 
 - ห้ามอ่าน SKILL.md โดยตรง — ต้องผ่าน script นี้เท่านั้น
 - ถ้า output มีเนื้อหา → อ่านให้ครบก่อนดำเนินการ
