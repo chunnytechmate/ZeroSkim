@@ -50,7 +50,7 @@ def get_state_file(session_id: str | None) -> str:
             safe_session = "default"
         filename = f".lazyguard-state-session-{safe_session}.json"
     else:
-        filename = ".skill-state.json"
+        filename = ".lazyguard-state.json"
     return os.path.join(BASE_STATE_DIR, filename)
 
 
@@ -236,7 +236,7 @@ def read_skill(skill_name: str, state_file: str, force: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="LazyGuard — hash-based read gate for AI agent skill files"
+        description="Skill Read Guard — hash-based read gate for AI agent skill files"
     )
     parser.add_argument("skill_name", nargs="?", help="Name of the skill to read")
     parser.add_argument("--list", action="store_true", help="List all skills and status")

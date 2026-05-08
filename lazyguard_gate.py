@@ -25,61 +25,38 @@ MAX_AGE_MINUTES = 5
 
 
 def require_lazyguard(skill_name: str, session_id: str | None = None):
-    """
-    Check that lazyguard.py was called for this skill within MAX_AGE_MINUTES.
-    If not, print error and exit with code 1.
-    """
-    # 1. Resolve state file path to match lazyguard.py
+    """Enforce that LazyGuard was called within the last 5 minutes."""
+    # Resolve state file path to match lazyguard.py
     if session_id:
-        safe_session = re.sub(r'[^a-zA-Z0-9_-]', '', session_id) or "default"
-        state_file = os.path.join(BASE_STATE_DIR, f".lazyguard-state-session-{safe_session}.json")
-        cmd_hint = f"python3 ~/.openclaw/workspace/scripts/lazyguard.py {skill_name} --session {safe_session}"
+        safe_id = re.sub(r'[^a-zA-Z0-9_-]', '', session_id) or "default"
+        state_file = os.path.join(BASE_STATE_DIR, f".lazyguard-state-session-{safe_id}.json")
     else:
         state_file = os.path.join(BASE_STATE_DIR, ".lazyguard-state.json")
-        cmd_hint = f"python3 ~/.openclaw/workspace/scripts/lazyguard.py {skill_name}"
 
-    # 2. Check state file exists
     if not os.path.isfile(state_file):
-        print(f"❌ LAZYGUARD NOT RUN: No state file found for this session.")
-        print(f"   → Run: {cmd_hint}")
-        sys.exit(1)
+        _abort(skill_name, "No LazyGuard state found for this session.")
 
-    # 3. Load JSON (handle corrupt files)
     try:
         with open(state_file, "r", encoding="utf-8") as f:
             state = json.load(f)
     except (json.JSONDecodeError, IOError):
-        print(f"❌ LAZYGUARD STATE CORRUPT: Cannot read state file.")
-        print(f"   → Run: {cmd_hint}")
-        sys.exit(1)
+        _abort(skill_name, "State file corrupt.")
 
-    # 4. Check if this skill was read
     if skill_name not in state:
-        print(f"❌ LAZYGUARD NOT RUN: '{skill_name}' not found in state file.")
-        print(f"   → Run: {cmd_hint}")
-        sys.exit(1)
+        _abort(skill_name, "Skill not found in read-cache. Run lazyguard first.")
 
     entry = state[skill_name]
-    last_read_str = entry.get("last_read", "")
-    if not last_read_str:
-        print(f"❌ LAZYGUARD: No timestamp found for '{skill_name}'")
-        print(f"   → Run: {cmd_hint}")
-        sys.exit(1)
-
-    # 5. Check age (timeout 5 minutes)
-    try:
-        last_read = datetime.fromisoformat(last_read_str)
-    except ValueError:
-        print(f"❌ LAZYGUARD: Invalid timestamp for '{skill_name}'")
-        sys.exit(1)
-
+    last_read = datetime.fromisoformat(entry.get("last_read", "1970-01-01T00:00:00"))
     age = datetime.now() - last_read
 
     if age > timedelta(minutes=MAX_AGE_MINUTES):
-        print(f"❌ LAZYGUARD EXPIRED: '{skill_name}' was read {int(age.total_seconds()/60)} minutes ago (max {MAX_AGE_MINUTES} min)")
-        print(f"   → Re-run: {cmd_hint}")
-        sys.exit(1)
+        _abort(skill_name, f"Read-cache EXPIRED ({int(age.total_seconds()/60)} mins ago).")
 
-    # All good
     lines = entry.get("lines", "?")
-    print(f"✅ LazyGuard OK: '{skill_name}' read {int(age.total_seconds())}s ago ({lines} lines)")
+    print(f"✅ LazyGuard OK: '{skill_name}' active ({int(age.total_seconds())}s ago, {lines} lines).")
+
+
+def _abort(skill: str, reason: str):
+    print(f"❌ LAZYGUARD BLOCK: {reason}")
+    print(f"   → Run: python3 lazyguard.py {skill}")
+    sys.exit(1)
