@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# ---------------------------------------------------------------------------
+# LazyGuard — Gate Enforcement
+# Copyright (c) 2026 Chunny (chunnytechmate). All rights reserved.
+# Licensed under the MIT License.
+# ---------------------------------------------------------------------------
 """
 lazyguard_gate.py — Import this in every skill script to enforce LazyGuard pre-read.
 

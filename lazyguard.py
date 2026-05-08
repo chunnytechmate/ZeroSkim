@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+# ---------------------------------------------------------------------------
+# LazyGuard
+# Copyright (c) 2026 Chunny (chunnytechmate). All rights reserved.
+# Licensed under the MIT License.
+# ---------------------------------------------------------------------------
 """
 lazyguard.py — บังคับอ่าน SKILL.md ทั้งหมดก่อนใช้งาน skill (รองรับ Session แยก)
 
