@@ -1,0 +1,19 @@
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# State (auto-generated at runtime)
+.skill-state.json
+
+# IDE
+.idea/
+.vscode/
