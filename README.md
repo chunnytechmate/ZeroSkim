@@ -44,7 +44,7 @@ When you have dozens of skills with 200+ line manuals each, the token cost adds 
 
 If the agent skips LazyGuard, the script blocks execution:
 
-```
+```text
 ❌ LAZYGUARD BLOCK: Skill not found in read-cache. Run lazyguard first.
    → Run: python3 lazyguard.py send-recording-line
 ```
@@ -141,11 +141,11 @@ $ python3 lazyguard.py music-class-summarizer
 
 | Scenario | Behavior |
 |----------|----------|
-| First read ever | Print full content + save hash |
+| Initial read | Print full content + save hash |
 | File unchanged | Print 5-line summary only |
 | File modified | Print full content + update hash |
 | `--session <id>` | Separate state file per session |
-| New session | Print full content (first read) |
+| New session (empty cache) | Print full content (first read) |
 | Corrupt state file | Auto-recover — starts fresh |
 
 ### Safety & Auto-Maintenance
@@ -165,7 +165,7 @@ MIT
 
 # 🇹🇭 LazyGuard (ภาษาไทย)
 
-ผู้คุมกฎสุดเข้มงวดที่ดัดนิสัย AI agent ขี้เกียจ บังคับให้อ่านกฎ (SKILL.md) ให้จบก่อนเริ่มงาน — ป้องกันข้อผิดพลาดที่ราคาแพงในระบบ Production
+ผู้คุมกฎสุดเข้มงวดที่ดัดนิสัย AI agent ขี้เกียจ บังคับให้อ่านกฎ (SKILL.md) ให้จบก่อนเริ่มงาน — ป้องกันความเสียหายร้ายแรงในระบบ Production
 
 ## ปัญหา
 
@@ -191,6 +191,30 @@ AI agent มักจะเจอปัญหาเดิมๆ ทุกคร�
 
 - **กฎ 5 นาที**: AI จะต้องรัน LazyGuard มาไม่เกิน 5 นาทีก่อนรันงานจริง มิฉะนั้นสคริปต์จะ **บล็อกการทำงานทันที**
 - **บังคับวินัย**: ไม่มีทางลัด AI ต้องผ่านด่านตรวจก่อนเสมอ
+
+## 🚀 Prompt สำหรับตั้งค่า AI Agent (One-Prompt Install)
+
+คัดลอก Prompt ด้านล่างนี้ไปใส่ใน `AGENTS.md` หรือ System Prompt ของ AI เพื่อสร้างวินัยให้ Agent ของคุณ:
+
+```markdown
+## ⚠️ LazyGuard — ระบบบังคับอ่าน Skill (คำสั่งบังคับ)
+
+คุณต้องทำตามกฎเหล่านี้ทุกครั้ง ไม่มีข้อยกเว้น
+
+### กฎข้อที่ 1: ต้องใช้ lazyguard.py ก่อนใช้ Skill เสมอ
+ก่อนที่จะใช้งาน Skill ใดๆ คุณต้องรันคำสั่งนี้ก่อนเสมอ:
+  python3 lazyguard.py <skill_name> [--session <id>]
+
+- ห้ามอ่านไฟล์ SKILL.md โดยตรงผ่านเครื่องมือ read เด็ดขาด — ต้องอ่านผ่าน lazyguard.py เท่านั้น
+- ถ้าผลลัพธ์แสดงเนื้อหาแบบเต็ม ให้คุณอ่านให้ละเอียดก่อนทำงาน
+- ถ้าผลลัพธ์แสดงคำว่า UNCHANGED แปลว่าคุณมีข้อมูลนี้ในความจำของ session นี้แล้ว ทำงานต่อได้เลย
+
+### กฎข้อที่ 2: กฎ 5 นาที (The 5-Minute Enforcement)
+คุณต้องรัน LazyGuard มาไม่เกิน 5 นาทีก่อนที่จะเรียกใช้ Skill หากคุณทิ้งช่วงนานเกินไป สคริปต์จะ BLOCK คุณทันที ให้คุณรัน LazyGuard ใหม่อีกครั้งเพื่อรีเฟรชความจำ
+
+### กฎข้อที่ 3: ห้ามแอบข้ามขั้นตอน
+Skill Scripts ถูกเขียนไว้ให้บล็อกการทำงานทันทีหากคุณไม่ทำตามกฎข้อ 1 และ 2 ไม่มีทางลัด คุณต้องรัน lazyguard ก่อนเสมอ!
+```
 
 ## การติดตั้ง
 
