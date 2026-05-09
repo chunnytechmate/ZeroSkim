@@ -84,12 +84,17 @@ requireZeroskim('my-skill');
 
 📖 Full API documentation: [`PACKAGE.md`](./PACKAGE.md)
 
-### Option B: Standalone Script Installation
+### Option B: Standalone Script (Direct Download)
 
-If you prefer not to use package managers, you can drop the scripts directly into your project:
+If you prefer not to use package managers, you can download the core scripts directly into your project's workspace using `curl`:
 
-1. Place `zeroskim.py` and `zeroskim_gate.py` into your agent's workspace directory.
-2. Import the gate directly into your skill scripts:
+```bash
+# Download the main script and the gate enforcement
+curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim.py
+curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim_gate.py
+```
+
+Then, import the gate directly into your skill scripts:
 
 ```python
 import sys, os
@@ -243,7 +248,12 @@ const { requireZeroskim } = require('zeroskim');
 requireZeroskim('my-skill'); // บล็อกทันทีถ้ายังไม่ได้อ่าน
 ```
 
-💡 หากไม่ต้องการติดตั้งผ่าน Package คุณสามารถนำสคริปต์ `zeroskim.py` ไปวางในโปรเจกต์โดยตรงได้เช่นกัน
+💡 หากไม่ต้องการติดตั้งผ่าน Package คุณสามารถใช้ `curl` ดึงสคริปต์ไปวางในโปรเจกต์ได้เลย:
+
+```bash
+curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim.py
+curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim_gate.py
+```
 
 ### Docker
 
