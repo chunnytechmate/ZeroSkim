@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # ---------------------------------------------------------------------------
-# LazyGuard
+# ZeroSkim
 # Copyright (c) 2026 Chunny (chunnytechmate). All rights reserved.
 # Licensed under the MIT License.
 # ---------------------------------------------------------------------------
 """
-lazyguard.py — บังคับอ่าน SKILL.md ทั้งหมดก่อนใช้งาน skill (รองรับ Session แยก)
+zeroskim.py — บังคับอ่าน SKILL.md ทั้งหมดก่อนใช้งาน skill (รองรับ Session แยก)
 
 วิธีทำงาน:
   - Track SHA256 hash ของแต่ละ SKILL.md **แยกตาม Session ID**
@@ -14,15 +14,15 @@ lazyguard.py — บังคับอ่าน SKILL.md ทั้งหมด�
   - **Session-aware**: session เปลี่ยน → ถือว่ายังไม่เคยอ่าน → ต้องอ่านใหม่
 
 Usage:
-  python3 lazyguard.py <skill_name> [--session <session_id>]
-  python3 lazyguard.py <skill_name> --force
-  python3 lazyguard.py --list [--session <session_id>]
+  python3 zeroskim.py <skill_name> [--session <session_id>]
+  python3 zeroskim.py <skill_name> --force
+  python3 zeroskim.py --list [--session <session_id>]
 
 Examples:
-  python3 lazyguard.py send-recording-line
-  python3 lazyguard.py send-recording-line --session abc123
-  python3 lazyguard.py music-class-summarizer --force
-  python3 lazyguard.py --list
+  python3 zeroskim.py send-recording-line
+  python3 zeroskim.py send-recording-line --session abc123
+  python3 zeroskim.py music-class-summarizer --force
+  python3 zeroskim.py --list
 """
 
 import sys
@@ -53,9 +53,9 @@ def get_state_file(session_id: str | None) -> str:
         safe_session = re.sub(r'[^a-zA-Z0-9_-]', '', session_id)
         if not safe_session:
             safe_session = "default"
-        filename = f".lazyguard-state-session-{safe_session}.json"
+        filename = f".zeroskim-state-session-{safe_session}.json"
     else:
-        filename = ".lazyguard-state.json"
+        filename = ".zeroskim-state.json"
     return os.path.join(BASE_STATE_DIR, filename)
 
 
@@ -63,7 +63,7 @@ def gc_stale_session_states(max_age_days: int = 7):
     """ลบ session state files ที่เก่าเกิน max_age_days วัน (Garbage Collection)"""
     if not os.path.isdir(BASE_STATE_DIR):
         return 0
-    pattern = os.path.join(BASE_STATE_DIR, ".lazyguard-state-session-*.json")
+    pattern = os.path.join(BASE_STATE_DIR, ".zeroskim-state-session-*.json")
     cutoff = datetime.now() - timedelta(days=max_age_days)
     removed = 0
     for filepath in glob.glob(pattern):
@@ -121,7 +121,7 @@ def save_state(state_file: str, state: dict):
         os.makedirs(state_dir, exist_ok=True)
 
         fd, tmp_path = tempfile.mkstemp(
-            dir=state_dir, suffix=".json", prefix=".lazyguard-state-"
+            dir=state_dir, suffix=".json", prefix=".zeroskim-state-"
         )
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -241,7 +241,7 @@ def read_skill(skill_name: str, state_file: str, force: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="LazyGuard — hash-based read gate for AI agent skill files"
+        description="ZeroSkim — hash-based read gate for AI agent skill files"
     )
     parser.add_argument("skill_name", nargs="?", help="Name of the skill to read")
     parser.add_argument("--list", action="store_true", help="List all skills and status")
