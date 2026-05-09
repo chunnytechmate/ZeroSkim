@@ -169,7 +169,7 @@ AI agents love to skim. ZeroSkim makes sure they don't.
 
 ---
 
-## 📦 ติดตั้งเป็น Package
+## 📦 Install as Package
 
 ### Python (pip)
 
@@ -180,9 +180,12 @@ pip install zeroskim
 ```python
 from zeroskim import ZeroSkim, require_zeroskim
 
+# Read a skill with anti-skimming cache
 zs = ZeroSkim(workspace_dir="/path/to/workspace")
 result = zs.read("my-skill", session_id="abc123")
-require_zeroskim("my-skill")  # บล็อกถ้ายังไม่ได้อ่าน
+
+# Hard gate enforcement in skill scripts
+require_zeroskim("my-skill")  # Exits if not read recently
 ```
 
 ### Node.js (npm)
@@ -194,12 +197,15 @@ npm install zeroskim
 ```javascript
 const { ZeroSkim, requireZeroskim } = require('zeroskim');
 
+// Read a skill with anti-skimming cache
 const zs = new ZeroSkim({ workspaceDir: '/path/to/workspace' });
 const result = zs.read('my-skill', { sessionId: 'abc123' });
-requireZeroskim('my-skill');  // บล็อกถ้ายังไม่ได้อ่าน
+
+// Hard gate enforcement in skill scripts
+requireZeroskim('my-skill');  // Exits if not read recently
 ```
 
-> 📖 รายละเอียดเพิ่มเติม: [`PACKAGE.md`](./PACKAGE.md)
+> 📖 Full package docs: [`PACKAGE.md`](./PACKAGE.md)
 
 ---
 
@@ -277,7 +283,7 @@ from zeroskim_gate import require_zeroskim
 require_zeroskim("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION_ID"))
 ```
 
-## 📦 Install as Package
+## 📦 ติดตั้งเป็น Package
 
 ### Python (pip)
 
@@ -288,12 +294,9 @@ pip install zeroskim
 ```python
 from zeroskim import ZeroSkim, require_zeroskim
 
-# Read a skill with anti-skimming cache
 zs = ZeroSkim(workspace_dir="/path/to/workspace")
 result = zs.read("my-skill", session_id="abc123")
-
-# Hard gate enforcement in skill scripts
-require_zeroskim("my-skill")  # Exits if not read recently
+require_zeroskim("my-skill")  # บล็อกถ้ายังไม่ได้อ่าน
 ```
 
 ### Node.js (npm)
@@ -305,15 +308,12 @@ npm install zeroskim
 ```javascript
 const { ZeroSkim, requireZeroskim } = require('zeroskim');
 
-// Read a skill with anti-skimming cache
 const zs = new ZeroSkim({ workspaceDir: '/path/to/workspace' });
 const result = zs.read('my-skill', { sessionId: 'abc123' });
-
-// Hard gate enforcement in skill scripts
-requireZeroskim('my-skill');  // Exits if not read recently
+requireZeroskim('my-skill');  // บล็อกถ้ายังไม่ได้อ่าน
 ```
 
-> 📖 Full package docs: [`PACKAGE.md`](./PACKAGE.md)
+> 📖 รายละเอียดเพิ่มเติม: [`PACKAGE.md`](./PACKAGE.md)
 
 ---
 
