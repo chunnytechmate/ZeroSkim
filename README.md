@@ -99,6 +99,28 @@ from zeroskim_gate import require_zeroskim
 require_zeroskim("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION_ID"))
 ```
 
+### Option C: Docker Environments
+
+If your AI agent runs inside a Docker container, ZeroSkim is fully equipped to handle containerized environments via configuration variables.
+
+**1. Set Environment Variables:**
+Configure these variables in your `Dockerfile` or `docker-compose.yml` so ZeroSkim knows where to store its cache and locate scripts:
+
+```yaml
+environment:
+  - OPENCLAW_STATE_DIR=/app/workspace   # Where .zeroskim-state.json lives
+  - OPENCLAW_SCRIPTS_DIR=/app/scripts   # Where zeroskim_gate.py lives
+```
+
+**2. Ensure Volumes are Mounted:**
+Since ZeroSkim needs to read your SKILL.md files and persist its cache across container restarts, ensure your workspace is mounted as a volume:
+
+```yaml
+volumes:
+  - ./local_workspace:/app/workspace
+  - ./local_scripts:/app/scripts
+```
+
 ## 🚀 One-Prompt Install for AI Agents
 
 Copy this snippet to your `AGENTS.md` or the agent's System Prompt to enforce strict discipline:
@@ -222,6 +244,20 @@ requireZeroskim('my-skill'); // บล็อกทันทีถ้ายัง
 ```
 
 💡 หากไม่ต้องการติดตั้งผ่าน Package คุณสามารถนำสคริปต์ `zeroskim.py` ไปวางในโปรเจกต์โดยตรงได้เช่นกัน
+
+### Docker
+
+หาก AI Agent ของคุณรันอยู่ใน Docker Container สามารถตั้งค่า Environment Variables เพื่อให้ ZeroSkim ทำงานได้ทันที:
+
+```yaml
+environment:
+  - OPENCLAW_STATE_DIR=/app/workspace   # ตำแหน่งเก็บ .zeroskim-state.json
+  - OPENCLAW_SCRIPTS_DIR=/app/scripts   # ตำแหน่ง zeroskim_gate.py
+
+volumes:
+  - ./local_workspace:/app/workspace    # Mount เพื่อให้อ่าน SKILL.md ได้
+  - ./local_scripts:/app/scripts        # Mount เพื่อให้ cache คงอยู่ข้าม restart
+```
 
 ## 🚀 Prompt สำหรับตั้งค่า AI Agent (One-Prompt Install)
 
