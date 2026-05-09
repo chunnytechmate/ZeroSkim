@@ -1,0 +1,41 @@
+{
+  "name": "zeroskim",
+  "version": "1.0.0",
+  "description": "Stop AI agents from skimming skill files. Zero-tolerance enforcement for full reads.",
+  "main": "src/index.js",
+  "bin": {
+    "zeroskim": "./src/cli.js"
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "start": "node src/cli.js"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "anti-skimming",
+    "skill-management",
+    "openclaw",
+    "llm",
+    "cache",
+    "guard"
+  ],
+  "author": "Chunny <chunnytechmate@users.noreply.github.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chunnytechmate/ZeroSkim.git"
+  },
+  "homepage": "https://github.com/chunnytechmate/ZeroSkim#readme",
+  "bugs": {
+    "url": "https://github.com/chunnytechmate/ZeroSkim/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ]
+}

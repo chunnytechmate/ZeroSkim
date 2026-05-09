@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "zeroskim"
+version = "1.0.0"
+description = "Stop AI agents from skimming skill files. Zero-tolerance enforcement for full SKILL.md reads."
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [
+    {name = "Chunny", email = "chunnytechmate@users.noreply.github.com"},
+]
+keywords = ["ai", "agent", "anti-skimming", "skill-management", "openclaw", "llm", "cache"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.scripts]
+zeroskim = "zeroskim.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/chunnytechmate/ZeroSkim"
+Repository = "https://github.com/chunnytechmate/ZeroSkim"
