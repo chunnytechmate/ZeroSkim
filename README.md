@@ -3,7 +3,7 @@
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
 ![Category: AI Agents](https://img.shields.io/badge/Category-AI_Agents-purple.svg)
-![Zero Skimming](https://img.shields.io/badge/Anti-Skimming-Enforced-red.svg)
+![Anti Skimming](https://img.shields.io/badge/Anti_Skimming-Enforced-red.svg)
 
 **Stop AI agents from skimming skill files. ZeroSkim forces full reads, caches intelligently, and blocks execution if the agent tries to skip reading — preventing costly mistakes in production AI systems.**
 
