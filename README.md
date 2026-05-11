@@ -14,10 +14,11 @@
 ## 📑 Table of Contents
 - [The Problem](#the-problem)
 - [The Solution (2-Layer Gate)](#the-solution--2-layer-protection)
-- [Installation (Package & Standalone)](#-installation)
-- [One-Prompt Install for AI Agents](#-one-prompt-install-for-ai-agents)
+- [⚙️ Architecture & How It Works](#️-architecture--how-it-works)
+- [📦 Installation](#-installation)
+- [🚀 One-Prompt Install for AI Agents](#-one-prompt-install-for-ai-agents)
 - [Quick Start & Usage](#quick-start--usage)
-- [How It Works](#how-it-works)
+- [🛡 Safety & Auto-Maintenance](#-safety--auto-maintenance)
 - [🇹🇭 ZeroSkim (ภาษาไทย)](#-zeroskim-ภาษาไทย)
 
 ---
@@ -47,6 +48,65 @@ If the agent attempts to skim or skip ZeroSkim entirely, the script immediately 
 ❌ ZEROSKIM BLOCK: Skill not found in read-cache. Run zeroskim first.
  → Run: npx zeroskim send-recording-line
 ```
+
+## ⚙️ Architecture & How It Works
+
+ZeroSkim works through a simple but highly effective **3-step hash-based read gate**:
+
+```text
+┌─────────────────────────────────────┐
+│  zeroskim <skill_name>              │
+└─────────────┬───────────────────────┘
+              ▼
+┌─────────────────────────┐
+│ 1. Find SKILL.md        │ → Searches in workspace & app skills
+└─────────────┬───────────┘   (Supports - and _ naming conventions)
+              ▼
+┌─────────────────────────┐
+│ 2. Compute SHA256 Hash  │ → Chunked read (8192 bytes), zero memory bloat
+└─────────────┬───────────┘
+              ▼
+┌─────────────────────────┐
+│ 3. Compare State        │ → Loads session-specific state file
+└─────────────┬───────────┘
+              │
+     ┌────────┴────────┐
+  Unchanged         Fresh / Changed
+     │                    │
+     ▼                    ▼
+┌──────────┐    ┌──────────────────┐
+│ OUTPUT:  │    │ OUTPUT:          │
+│ 4 Lines  │    │ Full Content     │
+│ of Meta  │    │ + Update Hash    │
+└──────────┘    └──────────────────┘
+```
+
+### 🔄 3 Reading States (Token Management)
+
+ZeroSkim drastically reduces token burn by determining exactly what the agent needs to see:
+
+| State | Condition | Output | Token Usage |
+| :--- | :--- | :--- | :--- |
+| **📖 FIRST READ** | Never read in this session | Full Content | **High** (Necessary) |
+| **⚠️ CHANGED** | Read before, but file hash changed | Full Content | **High** (Necessary) |
+| **✅ UNCHANGED** | Read before, hash matched perfectly | Metadata only (4 lines) | **Minimal** (Token Saver) |
+
+### 📦 State Management
+
+Read history is securely tracked in `.zeroskim-state.json`. Each session maintains its own state file to isolate context windows:
+
+```json
+{
+  "send-lesson-line": {
+    "hash": "a3f2b8c8d9e...",
+    "last_read": "2026-05-11T13:30:00",
+    "path": "/home/node/.openclaw/workspace/skills/send-lesson-line/SKILL.md",
+    "lines": 245
+  }
+}
+```
+
+State files are session-specific (e.g. `.zeroskim-state-session-abc123.json`), ensuring that each conversation maintains its own read cache. When a new session starts, the cache is empty — forcing a fresh first read and preventing hallucinated context from bleeding across sessions.
 
 ## 📦 Installation
 
@@ -177,22 +237,21 @@ $ zeroskim music-class-summarizer
 📌 Action: ALREADY IN CONTEXT — Proceed with task.
 ```
 
-## How It Works
+## 🛡 Safety & Auto-Maintenance
 
-| Scenario | Behavior |
-|----------|----------|
-| Initial read | Print full content + save hash |
-| File unchanged | Print 5-line summary only |
-| File modified | Print full content + update hash |
-| `--session <id>` | Separate state file per session |
-| New session (empty cache) | Print full content (first read) |
-| Corrupt state file | Auto-recover — starts fresh |
+ZeroSkim is designed for robust, long-running agentic workflows that run for days or weeks unattended:
 
-### Safety & Auto-Maintenance
-- **SHA256 Fingerprinting**: Automatically detects even a single-character change in your SKILL.md.
-- **Auto Garbage Collection (GC)**: Seamlessly removes session state files older than 7 days.
-- **Atomic Writes**: Prevents state file corruption during unexpected crashes using `os.replace()`.
-- **Path Traversal Protection**: Strictly sanitizes session IDs to `[a-zA-Z0-9_-]` only.
+### Atomic Writes
+State files are saved using the **atomic write pattern** (`tempfile.mkstemp()` → `os.replace()`). This two-step process guarantees that if the script crashes mid-write (OOM kill, signal, power loss), your state file will **never be corrupted** — you'll either have the old intact version or the new complete version, never a partial write.
+
+### Session-Aware Isolation
+Context is strictly bound to session IDs (`.zeroskim-state-session-xyz789.json`). When a chat session resets, the cache is fresh — completely preventing hallucinations where the agent falsely claims to remember rules from a previous conversation.
+
+### Auto Garbage Collection (GC)
+Every time ZeroSkim runs, it silently triggers `gc_stale_session_states(max_age_days=7)`, which prunes session state files older than 7 days. This keeps your workspace clean without manual maintenance, even with hundreds of concurrent sessions.
+
+### Path Traversal Protection
+Session IDs are strictly sanitized to `[a-zA-Z0-9_-]` only. Any characters outside this set are stripped, preventing arbitrary file writes or directory traversal attacks.
 
 ## License
 
@@ -218,13 +277,82 @@ AI agent มักจะเจอปัญหาเดิมๆ ทุกคร�
 ### ชั้นที่ 1: Soft Gate (สร้างวินัย)
 ZeroSkim ทำหน้าที่เป็นแคชอัจฉริยะ:
 - **รันครั้งแรก**: พิมพ์เนื้อหาเต็ม + บันทึก SHA256 Hash
-- **ไฟล์ไม่เปลี่ยน**: พิมพ์สรุป 5 บรรทัด (ช่วยประหยัด Token ได้ถึง ~97%)
+- **ไฟล์ไม่เปลี่ยน**: พิมพ์สรุป 4 บรรทัด (ช่วยประหยัด Token ได้ถึง ~97%)
 - **แยกตาม Session**: ป้องกันการสับสนระหว่างแชทเก่าและแชทใหม่
 
 ### ชั้นที่ 2: Hard Gate (บล็อกในระดับโค้ด)
 ใช้ `require_zeroskim` ติดตั้งไว้ในทุก Skill Script:
 - **กฎ 5 นาที**: AI จะต้องรัน ZeroSkim มาไม่เกิน 5 นาทีก่อนรันงานจริง มิฉะนั้นสคริปต์จะ **บล็อกการทำงานทันที**
 - **ไม่อนุญาตให้ใช้ทางลัด**: AI ต้องผ่านด่านตรวจก่อนเสมอ ไม่มีข้อยกเว้น
+
+## ⚙️ สถาปัตยกรรม (Architecture)
+
+ZeroSkim ทำงานผ่านระบบ **Hash-based Read Gate 3 ขั้นตอน**:
+
+```text
+┌─────────────────────────────────────┐
+│  zeroskim <skill_name>              │
+└─────────────┬───────────────────────┘
+              ▼
+┌─────────────────────────┐
+│ 1. หาไฟล์ SKILL.md     │ → ค้นหาใน workspace & app skills
+└─────────────┬───────────┘   (รองรับทั้ง - และ _)
+              ▼
+┌─────────────────────────┐
+│ 2. คำนวณ SHA256 Hash   │ → อ่านแบบ chunked (8192 bytes)
+└─────────────┬───────────┘
+              ▼
+┌─────────────────────────┐
+│ 3. เปรียบเทียบ State    │ → โหลดไฟล์ state ของ session นี้
+└─────────────┬───────────┘
+              │
+     ┌────────┴────────┐
+  ไม่เปลี่ยน          ใหม่ / เปลี่ยนแล้ว
+     │                    │
+     ▼                    ▼
+┌──────────┐    ┌──────────────────┐
+│ OUTPUT:  │    │ OUTPUT:          │
+│ 4 บรท.   │    │ เนื้อหาเต็ม       │
+│ Meta     │    │ + อัพเดต Hash    │
+└──────────┘    └──────────────────┘
+```
+
+### 🔄 3 สถานะการอ่าน (Token Management)
+
+| สถานะ | เงื่อนไข | Output | Token ที่ใช้ |
+| :--- | :--- | :--- | :--- |
+| **📖 FIRST READ** | ยังไม่เคยอ่านใน session นี้ | เนื้อหาเต็ม | **สูง** (จำเป็น) |
+| **⚠️ CHANGED** | เคยอ่าน แต่ hash เปลี่ยน | เนื้อหาเต็ม | **สูง** (จำเป็น) |
+| **✅ UNCHANGED** | เคยอ่าน และ hash ตรง | Metadata 4 บรรทัดเท่านั้น | **ต่ำมาก** (ประหยัด) |
+
+### 📦 State Management
+
+ประวัติการอ่านถูกเก็บไว้ใน `.zeroskim-state.json` แยกตาม session:
+
+```json
+{
+  "send-lesson-line": {
+    "hash": "a3f2b8c8d9e...",
+    "last_read": "2026-05-11T13:30:00",
+    "path": "/workspace/skills/send-lesson-line/SKILL.md",
+    "lines": 245
+  }
+}
+```
+
+## 🛡 ความปลอดภัยและการบำรุงรักษาอัตโนมัติ
+
+### Atomic Writes
+บันทึกไฟล์ State ด้วยรูปแบบ **Atomic Write** (`mkstemp` → `os.replace`) — รับประกันว่าหากสคริปต์ดับกะทันหัน (OOM kill, signal, ไฟฟ้าดับ) ไฟล์ State จะ **ไม่พังเด็ดขาด** จะได้ไฟล์เก่าที่สมบูรณ์ หรือไฟล์ใหม่ที่สมบูรณ์เสมอ
+
+### แยก State ตาม Session
+Context ถูกแยกอย่างเข้มงวดตาม Session ID (`.zeroskim-state-session-xyz789.json`) เมื่อ session ใหม่เริ่มขึ้น cache จะว่างเปล่า — ป้องกัน AI ดึงความจำจาก session อื่นมาหลอนผสมกันอย่างเด็ดขาด
+
+### Garbage Collection (GC)
+ทุกครั้งที่ ZeroSkim รัน จะลบไฟล์ State ที่เก่าเกิน 7 วันทิ้งอัตโนมัติ ไม่เปลืองพื้นที่ Workspace แม้จะมี session เป็นร้อยๆ
+
+### Path Traversal Protection
+Session ID ถูกกรองเหลือเฉพาะ `[a-zA-Z0-9_-]` เท่านั้น ป้องกันการเขียนไฟล์นอกเส้นทางที่กำหนด
 
 ## 📦 การติดตั้ง
 
