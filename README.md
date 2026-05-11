@@ -427,4 +427,4 @@ MIT
 
 ---
 
-_Created by [Chunny](https://github.com/chunnytechmate) | Built for AI Agents & [OpenClaw](https://github.com/nicepkg/openclaw)_
+_Created by [Chunny](https://github.com/chunnytechmate) | Built for AI Agents & [OpenClaw](https://openclaw.ai/)_
