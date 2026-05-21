@@ -208,3 +208,110 @@ def require_zeroskim(skill_name, session_id=None, max_age_minutes=5):
             pass
 
     print(f"✅ ZeroSkim OK: '{skill_name}' active ({entry.get('last_read', '?')} ago, {entry.get('lines', '?')} lines).")
+
+
+# ---------------------------------------------------------------------------
+# Layer 2: Step Completion Gate (Convention-based)
+# ---------------------------------------------------------------------------
+
+def require_step_done(skill_name, step):
+    """
+    Convention-based hard gate: verify that a step was actually performed
+    by checking if the step name appears in today's agent log.
+
+    How it works:
+    1. Find the skill's log directory (auto-discover)
+    2. Read today's agent log file
+    3. Search for the step name in the log
+    4. If found → pass, if not → block
+
+    Convention: agent writes entries like:
+      | 12:30:00 | read-comments | detail |
+
+    So searching for the step name in the log content is sufficient.
+
+    Usage:
+      require_step_done("hangyao-socialmedia", "read-comments")
+      require_step_done("send-lesson-line", "fetch-student")
+    """
+    from datetime import datetime, timezone, timedelta as _td
+    from pathlib import Path as _Path
+
+    _TZ_BKK = timezone(_td(hours=7))
+    today_str = datetime.now(_TZ_BKK).strftime("%Y-%m-%d")
+
+    log_paths = _find_log_paths(skill_name, today_str)
+
+    if not log_paths:
+        _abort_step_done(skill_name, step,
+            f"No log file found for today ({today_str}). "
+            f"Run the step first, then try again.")
+
+    for log_path in log_paths:
+        try:
+            content = log_path.read_text(encoding="utf-8")
+        except (IOError, OSError):
+            continue
+
+        if _step_in_log(step, content):
+            print(f"✅ Step OK: '{step}' found in {log_path.name}")
+            return
+
+    _abort_step_done(skill_name, step,
+        f"Step '{step}' not found in today's logs ({today_str}). "
+        f"Complete this step first before proceeding.")
+
+
+def _find_log_paths(skill_name, today_str):
+    """Auto-discover log file paths for a skill."""
+    from pathlib import Path as _Path
+
+    workspace = _Path(os.environ.get("OPENCLAW_STATE_DIR", os.path.expanduser("~/.openclaw/workspace")))
+    bases = [workspace, workspace / "workspace"]
+
+    try:
+        script_dir = _Path(__file__).resolve().parent
+        if (script_dir.parent / "skills").is_dir():
+            bases.append(script_dir.parent)
+    except Exception:
+        pass
+
+    seen = set()
+    candidates = []
+    for base in bases:
+        for pattern in [
+            base / "skills" / skill_name / "data" / "agent_logs" / f"{today_str}.md",
+            base / "skills" / skill_name / "logs" / f"{today_str}.md",
+            base / "data" / "agent_logs" / f"{today_str}.md",
+        ]:
+            if pattern not in seen and pattern.is_file():
+                candidates.append(pattern)
+                seen.add(pattern)
+    return candidates
+
+
+def _step_in_log(step, content):
+    """Check if step name appears in log content (flexible matching)."""
+    step_lower = step.lower()
+    content_lower = content.lower()
+
+    if step_lower in content_lower:
+        return True
+
+    step_variants = [
+        step_lower,
+        step_lower.replace("-", "_"),
+        step_lower.replace("-", " "),
+        step_lower.replace("_", " "),
+    ]
+
+    return any(v in content_lower for v in step_variants)
+
+
+def _abort_step_done(skill, step, reason):
+    """Block execution with clear error message."""
+    print(f"🛑 STEP BLOCK: {reason}", file=sys.stderr)
+    print(f"   Skill: {skill}", file=sys.stderr)
+    print(f"   Required step: {step}", file=sys.stderr)
+    print(f"   Fix: Complete '{step}' and log it, then try again.", file=sys.stderr)
+    sys.exit(1)

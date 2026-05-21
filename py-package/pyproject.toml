@@ -4,7 +4,7 @@ build-backend = "setuptools.backends._legacy:_Backend"
 
 [project]
 name = "zeroskim"
-version = "1.0.0"
+version = "1.1.0"
 description = "Stop AI agents from skimming skill files. Zero-tolerance enforcement for full SKILL.md reads."
 readme = "README.md"
 license = {text = "MIT"}

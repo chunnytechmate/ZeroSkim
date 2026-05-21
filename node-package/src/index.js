@@ -213,3 +213,82 @@ function requireZeroskim(skillName, options = {}) {
 }
 
 module.exports = { ZeroSkim, requireZeroskim };
+
+
+// ---------------------------------------------------------------------------
+// Layer 2: Step Completion Gate (Convention-based)
+// ---------------------------------------------------------------------------
+
+/**
+ * Convention-based hard gate: verify that a step was actually performed
+ * by checking if the step name appears in today's agent log.
+ *
+ * @param {string} skillName - Skill name
+ * @param {string} step - Step name to verify
+ */
+function requireStepDone(skillName, step) {
+  const today = new Date().toISOString().slice(0, 10);
+  const logPaths = findLogPaths(skillName, today);
+
+  if (logPaths.length === 0) {
+    console.error(`🛑 STEP BLOCK: No log file found for today (${today}). Run the step first.`);
+    console.error(`   Skill: ${skillName}`);
+    console.error(`   Required step: ${step}`);
+    process.exit(1);
+  }
+
+  for (const logPath of logPaths) {
+    try {
+      const content = fs.readFileSync(logPath, 'utf-8');
+      if (stepInLog(step, content)) {
+        console.log(`✅ Step OK: '${step}' found in ${path.basename(logPath)}`);
+        return;
+      }
+    } catch { /* skip unreadable files */ }
+  }
+
+  console.error(`🛑 STEP BLOCK: Step '${step}' not found in today's logs (${today}).`);
+  console.error(`   Skill: ${skillName}`);
+  console.error(`   Required step: ${step}`);
+  console.error(`   Fix: Complete '${step}' and log it, then try again.`);
+  process.exit(1);
+}
+
+function findLogPaths(skillName, todayStr) {
+  const base = process.env.OPENCLAW_STATE_DIR || path.join(require('os').homedir(), '.openclaw', 'workspace');
+  const bases = [base, path.join(base, 'workspace')];
+  const candidates = [];
+  const seen = new Set();
+
+  for (const b of bases) {
+    for (const pattern of [
+      path.join(b, 'skills', skillName, 'data', 'agent_logs', `${todayStr}.md`),
+      path.join(b, 'skills', skillName, 'logs', `${todayStr}.md`),
+      path.join(b, 'data', 'agent_logs', `${todayStr}.md`),
+    ]) {
+      if (!seen.has(pattern) && fs.existsSync(pattern)) {
+        candidates.push(pattern);
+        seen.add(pattern);
+      }
+    }
+  }
+  return candidates;
+}
+
+function stepInLog(step, content) {
+  const lower = step.toLowerCase();
+  const contentLower = content.toLowerCase();
+
+  if (contentLower.includes(lower)) return true;
+
+  const variants = [
+    lower,
+    lower.replace(/-/g, '_'),
+    lower.replace(/-/g, ' '),
+    lower.replace(/_/g, ' '),
+  ];
+
+  return variants.some(v => contentLower.includes(v));
+}
+
+module.exports = { ZeroSkim, requireZeroskim, requireStepDone };
