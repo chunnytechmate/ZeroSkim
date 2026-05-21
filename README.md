@@ -34,7 +34,7 @@ AI agents utilizing skill-based architectures (OpenClaw, Claude, GPT, etc.) face
 
 When scaling to dozens of skills with extensive manuals, token burn and error rates scale exponentially. **Skimming is the silent killer of AI agent reliability.**
 
-## The Solution — 2-Layer Protection
+## The Solution — 3-Layer Protection
 
 ### Layer 1: Soft Gate (Agent Discipline)
 ZeroSkim acts as a smart, session-aware cache between your agent and its skill files:
@@ -42,11 +42,41 @@ ZeroSkim acts as a smart, session-aware cache between your agent and its skill f
 2. **File unchanged** → Outputs a 5-line metadata summary (**~97% fewer tokens**).
 3. **Session isolation** → Separates cache per session ID, completely preventing hallucination after a chat reset.
 
-### Layer 2: Hard Gate (Script Enforcement)
+### Layer 2: Hard Gate — File Read (Script Enforcement)
 If the agent attempts to skim or skip ZeroSkim entirely, the script immediately blocks execution:
 ```text
 ❌ ZEROSKIM BLOCK: Skill not found in read-cache. Run zeroskim first.
  → Run: npx zeroskim send-recording-line
+```
+
+### Layer 3: Hard Gate — Step Completion (`require_step_done`)
+Even after reading the SKILL.md, agents may skip required workflow steps (e.g., reading comments before posting). `require_step_done` verifies that a step was **actually performed** by checking if the step name appears in today's agent log:
+
+```python
+from zeroskim_gate import require_zeroskim, require_step_done
+
+# Layer 1+2: File read gate
+require_zeroskim("my-skill")
+
+# Layer 3: Step completion gate
+require_step_done("my-skill", "read-comments")
+```
+
+```text
+✅ Step OK: 'read-comments' found in 2026-05-22.md
+```
+
+**How it works:**
+1. Auto-discovers the skill's log file (no config needed)
+2. Reads today's log
+3. Searches for the step name (supports hyphen/underscore/space variants)
+4. Found → pass. Not found → block with clear error message.
+
+```text
+🛑 STEP BLOCK: Step 'read-comments' not found in today's logs (2026-05-22).
+   Skill: my-skill
+   Required step: read-comments
+   Fix: Complete 'read-comments' and log it, then try again.
 ```
 
 ## ⚙️ Architecture & How It Works
@@ -208,6 +238,14 @@ You must have called ZeroSkim within the last 5 minutes to run a skill. If you w
 
 ### Rule 3: No Shortcuts
 Skill scripts will hard-block execution if Rule 1 and Rule 2 are not met. No shortcuts. Run zeroskim first. Always.
+
+### Rule 4: Complete Every Step
+If your skill has a workflow with required steps (e.g., read comments before posting), use `require_step_done` to verify each step was actually performed:
+  require_step_done("skill-name", "step-name")
+
+- This checks today's agent log for evidence that the step was completed.
+- If the step is not found, execution is blocked until the step is done.
+- No skipping steps. Complete them in order.
 ```
 
 ## Quick Start & Usage
@@ -235,6 +273,27 @@ $ zeroskim music-class-summarizer
 📖 Last read: 2026-05-08T12:45:11
 🔑 Hash: f74e5050ca0cbc8a...
 📌 Action: ALREADY IN CONTEXT — Proceed with task.
+```
+
+**Step Completion Gate (Layer 3):**
+```python
+# Python — in your skill script
+from zeroskim_gate import require_step_done
+
+# Verify a workflow step was actually performed
+require_step_done("my-skill", "read-comments")
+# ✅ Step OK: 'read-comments' found in 2026-05-22.md
+
+require_step_done("my-skill", "fetch-data")
+# 🛑 STEP BLOCK: Step 'fetch-data' not found in today's logs
+```
+
+```javascript
+// Node.js — in your skill script
+const { requireStepDone } = require('zeroskim');
+
+requireStepDone('my-skill', 'read-comments');
+// ✅ Step OK: 'read-comments' found in 2026-05-22.md
 ```
 
 ## 🛡 Safety & Auto-Maintenance
@@ -272,7 +331,7 @@ AI agent มักจะเจอปัญหาเดิมๆ ทุกคร�
 - **อ่านลวกๆ (Skim)** → ตัวการสำคัญที่ทำให้เกิด Error เงียบ เพราะได้ Context ไปไม่ครบ
 - **แกล้งทำเป็นจำได้ (Hallucination)** → AI หลอนไปเองว่าจำกฎได้ ทั้งที่เพิ่งถูกล้างความจำไป
 
-## วิธีแก้ — ระบบป้องกัน 2 ชั้น
+## วิธีแก้ — ระบบป้องกัน 3 ชั้น
 
 ### ชั้นที่ 1: Soft Gate (สร้างวินัย)
 ZeroSkim ทำหน้าที่เป็นแคชอัจฉริยะ:
@@ -280,10 +339,26 @@ ZeroSkim ทำหน้าที่เป็นแคชอัจฉริย�
 - **ไฟล์ไม่เปลี่ยน**: พิมพ์สรุป 4 บรรทัด (ช่วยประหยัด Token ได้ถึง ~97%)
 - **แยกตาม Session**: ป้องกันการสับสนระหว่างแชทเก่าและแชทใหม่
 
-### ชั้นที่ 2: Hard Gate (บล็อกในระดับโค้ด)
+### ชั้นที่ 2: Hard Gate — การอ่านไฟล์ (บล็อกในระดับโค้ด)
 ใช้ `require_zeroskim` ติดตั้งไว้ในทุก Skill Script:
-- **กฎ 5 นาที**: AI จะต้องรัน ZeroSkim มาไม่เกิน 5 นาทีก่อนรันงานจริง มิฉะนั้นสคริปต์จะ **บล็อกการทำงานทันที**
+- **กฎ 15 นาที**: AI จะต้องรัน ZeroSkim มาไม่เกิน 15 นาทีก่อนรันงานจริง มิฉะนั้นสคริปต์จะ **บล็อกการทำงานทันที**
 - **ไม่อนุญาตให้ใช้ทางลัด**: AI ต้องผ่านด่านตรวจก่อนเสมอ ไม่มีข้อยกเว้น
+
+### ชั้นที่ 3: Hard Gate — การทำ Step (`require_step_done`)
+แม้อ่าน SKILL.md แล้ว AI ก็อาจข้าม workflow step ที่บังคับ (เช่น ไม่อ่าน comments ก่อนโพส) `require_step_done` ตรวจสอบว่า step ถูก **ทำจริง** โดยค้นหาชื่อ step ใน agent log ของวันนี้
+
+```python
+from zeroskim_gate import require_zeroskim, require_step_done
+
+require_zeroskim("my-skill")  # ชั้นที่ 1+2
+require_step_done("my-skill", "read-comments")  # ชั้นที่ 3
+```
+
+**วิธีทำงาน:**
+1. หาไฟล์ log ของ skill อัตโนมัติ
+2. อ่าน log ของวันนี้
+3. ค้นหาชื่อ step (รองรับ hyphen/underscore/space)
+4. เจอ = ผ่าน, ไม่เจอ = บล็อก
 
 ## ⚙️ สถาปัตยกรรม (Architecture)
 
