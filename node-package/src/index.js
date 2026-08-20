@@ -12,6 +12,16 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Local-time ISO timestamp without timezone suffix (matches the Python
+// package's datetime.now().isoformat() convention, and parses back as
+// local time on the gate side — no UTC/local mismatch).
+function localIsoNow() {
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+    `T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
 // ---------------------------------------------------------------------------
 // zeroskim: Smart SKILL.md cache (anti-skimming)
 // ---------------------------------------------------------------------------
@@ -126,7 +136,7 @@ class zeroskim {
     const entry = state[skillName] || {};
     const cachedHash = entry.hash || '';
 
-    const now = new Date().toISOString().replace(/\.\d{3}Z$/, '');
+    const now = localIsoNow();
 
     if (force || cachedHash !== currentHash) {
       state[skillName] = { hash: currentHash, path: skillPath, lastRead: now, lines };
@@ -184,11 +194,12 @@ class zeroskim {
  * @param {string} skillName
  * @param {object} [options]
  * @param {string} [options.sessionId]
- * @param {number} [options.maxAgeMinutes=5]
+ * @param {number} [options.maxAgeMinutes=15]
+ * @param {string} [options.workspaceDir] - Must match the workspaceDir used for read()
  */
 function requirezeroskim(skillName, options = {}) {
-  const { sessionId = null, maxAgeMinutes = 5 } = options;
-  const zs = new zeroskim();
+  const { sessionId = null, maxAgeMinutes = 15, workspaceDir } = options;
+  const zs = new zeroskim({ workspaceDir });
   const state = zs._loadState(sessionId);
   const entry = state[skillName];
 
@@ -211,8 +222,6 @@ function requirezeroskim(skillName, options = {}) {
 
   console.log(`✅ zeroskim OK: '${skillName}' active (${entry.lastRead || '?'}, ${entry.lines || '?'} lines).`);
 }
-
-module.exports = { zeroskim, requirezeroskim };
 
 
 // ---------------------------------------------------------------------------

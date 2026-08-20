@@ -174,7 +174,7 @@ class zeroskim:
 # Gate enforcement (hard gate for skill scripts)
 # ---------------------------------------------------------------------------
 
-def require_zeroskim(skill_name, session_id=None, max_age_minutes=5):
+def require_zeroskim(skill_name, session_id=None, max_age_minutes=15, workspace_dir=None):
     """
     Hard gate: blocks execution if zeroskim hasn't been run recently.
 
@@ -183,9 +183,12 @@ def require_zeroskim(skill_name, session_id=None, max_age_minutes=5):
         from zeroskim import require_zeroskim
         require_zeroskim("my-skill")
 
+    Pass the same workspace_dir you used for zeroskim.read(), otherwise the
+    gate looks in the default workspace and cannot see the read state.
+
     Raises SystemExit if the skill hasn't been read via zeroskim recently.
     """
-    zs = zeroskim()
+    zs = zeroskim(workspace_dir=workspace_dir)
     state = zs._load_state(session_id)
 
     entry = state.get(skill_name)
