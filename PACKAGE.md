@@ -23,7 +23,7 @@ else:
     print("Already cached, proceed!")  # Unchanged
 
 # Hard gate enforcement in skill scripts
-require_zeroskim("my-skill")  # Exits if not read recently
+require_zeroskim("my-skill", workspace_dir="/path/to/workspace")  # Exits if not read recently
 ```
 
 ### CLI
@@ -54,7 +54,7 @@ if (result.content) {
 }
 
 // Hard gate enforcement in skill scripts
-requirezeroskim('my-skill');  // Exits if not read recently
+requirezeroskim('my-skill', { workspaceDir: '/path/to/workspace' });  // Exits if not read recently
 ```
 
 ### CLI

@@ -13,7 +13,7 @@
 
 ## 📑 Table of Contents
 - [The Problem](#the-problem)
-- [The Solution (2-Layer Gate)](#the-solution--2-layer-protection)
+- [The Solution (3-Layer Protection)](#the-solution--3-layer-protection)
 - [⚙️ Architecture & How It Works](#️-architecture--how-it-works)
 - [📦 Installation](#-installation)
 - [🚀 One-Prompt Install for AI Agents](#-one-prompt-install-for-ai-agents)
@@ -106,7 +106,7 @@ zeroskim works through a simple but highly effective **3-step hash-based read ga
      ▼                    ▼
 ┌──────────┐    ┌──────────────────┐
 │ OUTPUT:  │    │ OUTPUT:          │
-│ 4 Lines  │    │ Full Content     │
+│ 5 Lines  │    │ Full Content     │
 │ of Meta  │    │ + Update Hash    │
 └──────────┘    └──────────────────┘
 ```
@@ -119,7 +119,7 @@ zeroskim drastically reduces token burn by determining exactly what the agent ne
 | :--- | :--- | :--- | :--- |
 | **📖 FIRST READ** | Never read in this session | Full Content | **High** (Necessary) |
 | **⚠️ CHANGED** | Read before, but file hash changed | Full Content | **High** (Necessary) |
-| **✅ UNCHANGED** | Read before, hash matched perfectly | Metadata only (4 lines) | **Minimal** (Token Saver) |
+| **✅ UNCHANGED** | Read before, hash matched perfectly | Metadata only (5 lines) | **Minimal** (Token Saver) |
 
 ### 📦 State Management
 
@@ -154,8 +154,9 @@ from zeroskim import zeroskim, require_zeroskim
 zs = zeroskim(workspace_dir="/path/to/workspace")
 result = zs.read("my-skill", session_id="abc123")
 
-# Enforce the 5-Minute Rule in your skill scripts
-require_zeroskim("my-skill")
+# Enforce the 15-Minute Rule in your skill scripts
+# (pass the same workspace_dir you used for read())
+require_zeroskim("my-skill", workspace_dir="/path/to/workspace")
 ```
 
 **For Node.js (npm):**
@@ -168,8 +169,9 @@ const { zeroskim, requirezeroskim } = require('zeroskim');
 const zs = new zeroskim({ workspaceDir: '/path/to/workspace' });
 const result = zs.read('my-skill', { sessionId: 'abc123' });
 
-// Enforce the 5-Minute Rule in your skill scripts
-requirezeroskim('my-skill');
+// Enforce the 15-Minute Rule in your skill scripts
+// (pass the same workspaceDir you used for read())
+requirezeroskim('my-skill', { workspaceDir: '/path/to/workspace' });
 ```
 
 📖 Full API documentation: [`PACKAGE.md`](./PACKAGE.md)
@@ -205,6 +207,9 @@ Configure these variables in your `Dockerfile` or `docker-compose.yml` so zerosk
 environment:
   - OPENCLAW_STATE_DIR=/app/workspace   # Where .zeroskim-state.json lives
   - OPENCLAW_SCRIPTS_DIR=/app/scripts   # Where zeroskim_gate.py lives
+  # Optional: widen the gate window per skill (minutes). Default is 15.
+  # Skill "my-skill" -> ZEROSKIM_MAX_AGE_MY_SKILL=60
+  - ZEROSKIM_MAX_AGE_MY_SKILL=60
 ```
 
 **2. Ensure Volumes are Mounted:**
@@ -233,8 +238,8 @@ Before executing ANY skill, you must always run:
 - If the output includes full content, read it carefully and completely before proceeding.
 - If the output says UNCHANGED, you already have the required context in this session.
 
-### Rule 2: The 5-Minute Enforcement
-You must have called zeroskim within the last 5 minutes to run a skill. If you wait too long, the script will BLOCK you. Re-run zeroskim to refresh your context.
+### Rule 2: The 15-Minute Enforcement
+You must have called zeroskim within the last 15 minutes to run a skill. If you wait too long, the script will BLOCK you. Re-run zeroskim to refresh your context.
 
 ### Rule 3: No Shortcuts
 Skill scripts will hard-block execution if Rule 1 and Rule 2 are not met. No shortcuts. Run zeroskim first. Always.
@@ -336,7 +341,7 @@ AI agent มักจะเจอปัญหาเดิมๆ ทุกคร�
 ### ชั้นที่ 1: Soft Gate (สร้างวินัย)
 zeroskim ทำหน้าที่เป็นแคชอัจฉริยะ:
 - **รันครั้งแรก**: พิมพ์เนื้อหาเต็ม + บันทึก SHA256 Hash
-- **ไฟล์ไม่เปลี่ยน**: พิมพ์สรุป 4 บรรทัด (ช่วยประหยัด Token ได้ถึง ~97%)
+- **ไฟล์ไม่เปลี่ยน**: พิมพ์สรุป 5 บรรทัด (ช่วยประหยัด Token ได้ถึง ~97%)
 - **แยกตาม Session**: ป้องกันการสับสนระหว่างแชทเก่าและแชทใหม่
 
 ### ชั้นที่ 2: Hard Gate — การอ่านไฟล์ (บล็อกในระดับโค้ด)
@@ -387,7 +392,7 @@ zeroskim ทำงานผ่านระบบ **Hash-based Read Gate 3 ขั
      ▼                    ▼
 ┌──────────┐    ┌──────────────────┐
 │ OUTPUT:  │    │ OUTPUT:          │
-│ 4 บรท.   │    │ เนื้อหาเต็ม       │
+│ 5 บรท.   │    │ เนื้อหาเต็ม       │
 │ Meta     │    │ + อัพเดต Hash    │
 └──────────┘    └──────────────────┘
 ```
@@ -398,7 +403,7 @@ zeroskim ทำงานผ่านระบบ **Hash-based Read Gate 3 ขั
 | :--- | :--- | :--- | :--- |
 | **📖 FIRST READ** | ยังไม่เคยอ่านใน session นี้ | เนื้อหาเต็ม | **สูง** (จำเป็น) |
 | **⚠️ CHANGED** | เคยอ่าน แต่ hash เปลี่ยน | เนื้อหาเต็ม | **สูง** (จำเป็น) |
-| **✅ UNCHANGED** | เคยอ่าน และ hash ตรง | Metadata 4 บรรทัดเท่านั้น | **ต่ำมาก** (ประหยัด) |
+| **✅ UNCHANGED** | เคยอ่าน และ hash ตรง | Metadata 5 บรรทัดเท่านั้น | **ต่ำมาก** (ประหยัด) |
 
 ### 📦 State Management
 
@@ -466,6 +471,9 @@ curl -O https://raw.githubusercontent.com/chunnytechmate/zeroskim/main/zeroskim_
 environment:
   - OPENCLAW_STATE_DIR=/app/workspace   # ตำแหน่งเก็บ .zeroskim-state.json
   - OPENCLAW_SCRIPTS_DIR=/app/scripts   # ตำแหน่ง zeroskim_gate.py
+  # ไม่บังคับ: ขยายหน้าต่าง gate ราย skill (นาที) — default คือ 15
+  # Skill "my-skill" -> ZEROSKIM_MAX_AGE_MY_SKILL=60
+  - ZEROSKIM_MAX_AGE_MY_SKILL=60
 
 volumes:
   - ./local_workspace:/app/workspace    # Mount เพื่อให้อ่าน SKILL.md ได้
@@ -489,11 +497,19 @@ volumes:
 - ถ้าผลลัพธ์แสดงเนื้อหาแบบเต็ม ให้คุณอ่านให้ละเอียดก่อนทำงาน
 - ถ้าผลลัพธ์แสดงคำว่า UNCHANGED แปลว่าคุณมีข้อมูลนี้ในความจำของ session นี้แล้ว ทำงานต่อได้เลย
 
-### กฎข้อที่ 2: กฎ 5 นาที (The 5-Minute Enforcement)
-คุณต้องรัน zeroskim มาไม่เกิน 5 นาทีก่อนที่จะเรียกใช้ Skill หากคุณทิ้งช่วงนานเกินไป สคริปต์จะ BLOCK คุณทันที ให้คุณรัน zeroskim ใหม่อีกครั้งเพื่อรีเฟรชความจำ
+### กฎข้อที่ 2: กฎ 15 นาที (The 15-Minute Enforcement)
+คุณต้องรัน zeroskim มาไม่เกิน 15 นาทีก่อนที่จะเรียกใช้ Skill หากคุณทิ้งช่วงนานเกินไป สคริปต์จะ BLOCK คุณทันที ให้คุณรัน zeroskim ใหม่อีกครั้งเพื่อรีเฟรชความจำ
 
 ### กฎข้อที่ 3: ห้ามแอบข้ามขั้นตอน
 Skill Scripts ถูกเขียนไว้ให้บล็อกการทำงานทันทีหากคุณไม่ทำตามกฎข้อ 1 และ 2 ไม่มีทางลัด คุณต้องรัน zeroskim ก่อนเสมอ!
+
+### กฎข้อที่ 4: ทำทุก Step ให้ครบ
+หาก Skill ของคุณมี workflow ที่บังคับ step (เช่น ต้องอ่าน comments ก่อนโพสต์) ให้ใช้ `require_step_done` ตรวจสอบว่าแต่ละ step ถูกทำจริง:
+  require_step_done("skill-name", "step-name")
+
+- ระบบจะตรวจว่า step ปรากฏใน agent log ของวันนี้หรือไม่
+- ถ้าไม่เจอ การทำงานจะถูกบล็อกจนกว่าจะทำ step นั้นเสร็จ
+- ห้ามข้าม step — ทำตามลำดับให้ครบทุกขั้น
 ```
 
 ## License
