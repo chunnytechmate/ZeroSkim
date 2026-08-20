@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""ZeroSkim CLI — command-line interface for anti-skimming enforcement."""
+"""zeroskim CLI — command-line interface for anti-skimming enforcement."""
 
 import sys
 import argparse
-from .core import ZeroSkim
+from .core import zeroskim
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog="zeroskim",
-        description="ZeroSkim — Stop AI agents from skimming skill files."
+        description="zeroskim — Stop AI agents from skimming skill files."
     )
     parser.add_argument("skill_name", nargs="?", help="Skill name to read")
     parser.add_argument("--session", "-s", help="Session ID for per-session cache")
@@ -18,7 +18,7 @@ def main():
 
     args = parser.parse_args()
 
-    zs = ZeroSkim()
+    zs = zeroskim()
 
     if args.list:
         skills = zs.list_skills()

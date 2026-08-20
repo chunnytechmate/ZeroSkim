@@ -29,5 +29,5 @@ classifiers = [
 zeroskim = "zeroskim.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/chunnytechmate/ZeroSkim"
-Repository = "https://github.com/chunnytechmate/ZeroSkim"
+Homepage = "https://github.com/chunnytechmate/zeroskim"
+Repository = "https://github.com/chunnytechmate/zeroskim"

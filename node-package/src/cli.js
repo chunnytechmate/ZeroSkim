@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * ZeroSkim CLI — command-line interface for anti-skimming enforcement.
+ * zeroskim CLI — command-line interface for anti-skimming enforcement.
  */
 
-const { ZeroSkim } = require('./index');
+const { zeroskim } = require('./index');
 
 const args = process.argv.slice(2);
 let skillName = null;
@@ -24,7 +24,7 @@ for (let i = 0; i < args.length; i++) {
   }
 }
 
-const zs = new ZeroSkim();
+const zs = new zeroskim();
 
 if (listMode) {
   const skills = zs.listSkills();

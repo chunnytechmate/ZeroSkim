@@ -1,7 +1,7 @@
 /**
- * ZeroSkim — Stop AI agents from skimming skill files.
+ * zeroskim — Stop AI agents from skimming skill files.
  *
- * Core module providing the ZeroSkim cache system and gate enforcement.
+ * Core module providing the zeroskim cache system and gate enforcement.
  *
  * @module zeroskim
  * @author Chunny
@@ -13,10 +13,10 @@ const path = require('path');
 const crypto = require('crypto');
 
 // ---------------------------------------------------------------------------
-// ZeroSkim: Smart SKILL.md cache (anti-skimming)
+// zeroskim: Smart SKILL.md cache (anti-skimming)
 // ---------------------------------------------------------------------------
 
-class ZeroSkim {
+class zeroskim {
   /**
    * @param {object} [options]
    * @param {string} [options.workspaceDir] - Workspace directory path
@@ -180,15 +180,15 @@ class ZeroSkim {
 // ---------------------------------------------------------------------------
 
 /**
- * Hard gate: blocks execution if ZeroSkim hasn't been run recently.
+ * Hard gate: blocks execution if zeroskim hasn't been run recently.
  * @param {string} skillName
  * @param {object} [options]
  * @param {string} [options.sessionId]
  * @param {number} [options.maxAgeMinutes=5]
  */
-function requireZeroskim(skillName, options = {}) {
+function requirezeroskim(skillName, options = {}) {
   const { sessionId = null, maxAgeMinutes = 5 } = options;
-  const zs = new ZeroSkim();
+  const zs = new zeroskim();
   const state = zs._loadState(sessionId);
   const entry = state[skillName];
 
@@ -209,10 +209,10 @@ function requireZeroskim(skillName, options = {}) {
     }
   }
 
-  console.log(`✅ ZeroSkim OK: '${skillName}' active (${entry.lastRead || '?'}, ${entry.lines || '?'} lines).`);
+  console.log(`✅ zeroskim OK: '${skillName}' active (${entry.lastRead || '?'}, ${entry.lines || '?'} lines).`);
 }
 
-module.exports = { ZeroSkim, requireZeroskim };
+module.exports = { zeroskim, requirezeroskim };
 
 
 // ---------------------------------------------------------------------------
@@ -291,4 +291,4 @@ function stepInLog(step, content) {
   return variants.some(v => contentLower.includes(v));
 }
 
-module.exports = { ZeroSkim, requireZeroskim, requireStepDone };
+module.exports = { zeroskim, requirezeroskim, requireStepDone };

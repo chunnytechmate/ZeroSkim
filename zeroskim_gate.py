@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # ---------------------------------------------------------------------------
-# ZeroSkim — Gate Enforcement
+# zeroskim — Gate Enforcement
 # Copyright (c) 2026 Chunny (chunnytechmate). All rights reserved.
 # Licensed under the MIT License.
 # ---------------------------------------------------------------------------
 """
-zeroskim_gate.py — Import this in every skill script to enforce ZeroSkim pre-read.
+zeroskim_gate.py — Import this in every skill script to enforce zeroskim pre-read.
 
 Usage (add at top of any skill script):
   import sys, os
@@ -14,7 +14,7 @@ Usage (add at top of any skill script):
       sys.path.insert(0, scripts_dir)
   from zeroskim_gate import require_zeroskim, require_step_done
 
-  # Layer 1: File read gate (original ZeroSkim)
+  # Layer 1: File read gate (original zeroskim)
   require_zeroskim("send-recording-line", session_id=os.environ.get("OPENCLAW_SESSION_ID"))
 
   # Layer 2: Step completion gate (convention-based)
@@ -37,11 +37,11 @@ TZ_BKK = timezone(timedelta(hours=7))
 
 
 # ═══════════════════════════════════════════════════════════════════════
-# Layer 1: File Read Gate (original ZeroSkim)
+# Layer 1: File Read Gate (original zeroskim)
 # ═══════════════════════════════════════════════════════════════════════
 
 def require_zeroskim(skill_name: str, session_id: str | None = None):
-    """Enforce that ZeroSkim was called within the last N minutes."""
+    """Enforce that zeroskim was called within the last N minutes."""
     # Resolve state file path to match zeroskim.py
     if session_id:
         safe_id = re.sub(r'[^a-zA-Z0-9_-]', '', session_id) or "default"
@@ -50,7 +50,7 @@ def require_zeroskim(skill_name: str, session_id: str | None = None):
         state_file = os.path.join(BASE_STATE_DIR, ".zeroskim-state.json")
 
     if not os.path.isfile(state_file):
-        _abort(skill_name, "No ZeroSkim state found for this session.", session_id)
+        _abort(skill_name, "No zeroskim state found for this session.", session_id)
 
     try:
         with open(state_file, "r", encoding="utf-8") as f:
@@ -79,7 +79,7 @@ def require_zeroskim(skill_name: str, session_id: str | None = None):
         _abort(skill_name, f"Read-cache EXPIRED ({int(age.total_seconds()/60)} mins ago).", session_id)
 
     lines = entry.get("lines", "?")
-    print(f"✅ ZeroSkim OK: '{skill_name}' active ({int(age.total_seconds())}s ago, {lines} lines).")
+    print(f"✅ zeroskim OK: '{skill_name}' active ({int(age.total_seconds())}s ago, {lines} lines).")
 
 
 # ═══════════════════════════════════════════════════════════════════════

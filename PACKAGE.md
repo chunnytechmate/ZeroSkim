@@ -1,6 +1,6 @@
-# 📦 ZeroSkim Packages
+# 📦 zeroskim Packages
 
-ZeroSkim is available as both a **Python (pip)** and **Node.js (npm)** package.
+zeroskim is available as both a **Python (pip)** and **Node.js (npm)** package.
 
 ## Python (pip)
 
@@ -11,10 +11,10 @@ pip install zeroskim
 ### Usage as a library
 
 ```python
-from zeroskim import ZeroSkim, require_zeroskim
+from zeroskim import zeroskim, require_zeroskim
 
 # Read a skill with anti-skimming cache
-zs = ZeroSkim(workspace_dir="/path/to/workspace")
+zs = zeroskim(workspace_dir="/path/to/workspace")
 result = zs.read("my-skill", session_id="abc123")
 
 if result["content"]:
@@ -41,10 +41,10 @@ npm install zeroskim
 ### Usage as a library
 
 ```javascript
-const { ZeroSkim, requireZeroskim } = require('zeroskim');
+const { zeroskim, requirezeroskim } = require('zeroskim');
 
 // Read a skill with anti-skimming cache
-const zs = new ZeroSkim({ workspaceDir: '/path/to/workspace' });
+const zs = new zeroskim({ workspaceDir: '/path/to/workspace' });
 const result = zs.read('my-skill', { sessionId: 'abc123' });
 
 if (result.content) {
@@ -54,7 +54,7 @@ if (result.content) {
 }
 
 // Hard gate enforcement in skill scripts
-requireZeroskim('my-skill');  // Exits if not read recently
+requirezeroskim('my-skill');  // Exits if not read recently
 ```
 
 ### CLI

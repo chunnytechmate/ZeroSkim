@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ZeroSkim — Stop AI agents from skimming skill files.
+zeroskim — Stop AI agents from skimming skill files.
 
-Core module providing the ZeroSkim cache system and gate enforcement.
+Core module providing the zeroskim cache system and gate enforcement.
 """
 
 import sys
@@ -14,16 +14,16 @@ import re
 import time
 
 # ---------------------------------------------------------------------------
-# ZeroSkim: Smart SKILL.md cache (anti-skimming)
+# zeroskim: Smart SKILL.md cache (anti-skimming)
 # ---------------------------------------------------------------------------
 
-class ZeroSkim:
+class zeroskim:
     """
     Forces AI agents to fully read SKILL.md files before execution.
     Tracks SHA256 hashes per session to prevent skimming.
 
     Usage:
-        zs = ZeroSkim(workspace_dir="/path/to/workspace")
+        zs = zeroskim(workspace_dir="/path/to/workspace")
         result = zs.read("my-skill", session_id="abc123")
     """
 
@@ -176,16 +176,16 @@ class ZeroSkim:
 
 def require_zeroskim(skill_name, session_id=None, max_age_minutes=5):
     """
-    Hard gate: blocks execution if ZeroSkim hasn't been run recently.
+    Hard gate: blocks execution if zeroskim hasn't been run recently.
 
     Call this at the top of every skill script:
 
         from zeroskim import require_zeroskim
         require_zeroskim("my-skill")
 
-    Raises SystemExit if the skill hasn't been read via ZeroSkim recently.
+    Raises SystemExit if the skill hasn't been read via zeroskim recently.
     """
-    zs = ZeroSkim()
+    zs = zeroskim()
     state = zs._load_state(session_id)
 
     entry = state.get(skill_name)
@@ -207,7 +207,7 @@ def require_zeroskim(skill_name, session_id=None, max_age_minutes=5):
         except (ValueError, OverflowError):
             pass
 
-    print(f"✅ ZeroSkim OK: '{skill_name}' active ({entry.get('last_read', '?')} ago, {entry.get('lines', '?')} lines).")
+    print(f"✅ zeroskim OK: '{skill_name}' active ({entry.get('last_read', '?')} ago, {entry.get('lines', '?')} lines).")
 
 
 # ---------------------------------------------------------------------------

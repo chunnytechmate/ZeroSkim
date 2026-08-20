@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # ---------------------------------------------------------------------------
-# ZeroSkim
+# zeroskim
 # Copyright (c) 2026 Chunny (chunnytechmate). All rights reserved.
 # Licensed under the MIT License.
 # ---------------------------------------------------------------------------
@@ -241,7 +241,7 @@ def read_skill(skill_name: str, state_file: str, force: bool = False):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="ZeroSkim — hash-based read gate for AI agent skill files"
+        description="zeroskim — hash-based read gate for AI agent skill files"
     )
     parser.add_argument("skill_name", nargs="?", help="Name of the skill to read")
     parser.add_argument("--list", action="store_true", help="List all skills and status")

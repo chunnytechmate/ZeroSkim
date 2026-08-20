@@ -24,11 +24,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chunnytechmate/ZeroSkim.git"
+    "url": "git+https://github.com/chunnytechmate/zeroskim.git"
   },
-  "homepage": "https://github.com/chunnytechmate/ZeroSkim#readme",
+  "homepage": "https://github.com/chunnytechmate/zeroskim#readme",
   "bugs": {
-    "url": "https://github.com/chunnytechmate/ZeroSkim/issues"
+    "url": "https://github.com/chunnytechmate/zeroskim/issues"
   },
   "engines": {
     "node": ">=18.0.0"

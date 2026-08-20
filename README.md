@@ -1,13 +1,13 @@
-# 🛡 ZeroSkim
+# 🛡 zeroskim
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)
 ![Node.js 18+](https://img.shields.io/badge/node-18%2B-brightgreen.svg)
 ![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)
 ![Category: AI Agents](https://img.shields.io/badge/Category-AI_Agents-purple.svg)
 
-**Stop AI agents from skimming skill files. ZeroSkim forces full reads, intelligently caches context, and hard-blocks execution if the agent attempts a shortcut — preventing costly mistakes in production AI systems.**
+**Stop AI agents from skimming skill files. zeroskim forces full reads, intelligently caches context, and hard-blocks execution if the agent attempts a shortcut — preventing costly mistakes in production AI systems.**
 
-> *ZeroSkim = Zero Tolerance for Skimming.*
+> *zeroskim = Zero Tolerance for Skimming.*
 
 ---
 
@@ -19,7 +19,7 @@
 - [🚀 One-Prompt Install for AI Agents](#-one-prompt-install-for-ai-agents)
 - [Quick Start & Usage](#quick-start--usage)
 - [🛡 Safety & Auto-Maintenance](#-safety--auto-maintenance)
-- [🇹🇭 ZeroSkim (ภาษาไทย)](#-zeroskim-ภาษาไทย)
+- [🇹🇭 zeroskim (ภาษาไทย)](#-zeroskim-ภาษาไทย)
 
 ---
 
@@ -37,13 +37,13 @@ When scaling to dozens of skills with extensive manuals, token burn and error ra
 ## The Solution — 3-Layer Protection
 
 ### Layer 1: Soft Gate (Agent Discipline)
-ZeroSkim acts as a smart, session-aware cache between your agent and its skill files:
+zeroskim acts as a smart, session-aware cache between your agent and its skill files:
 1. **Initial read** → Outputs full file content and records a SHA256 fingerprint.
 2. **File unchanged** → Outputs a 5-line metadata summary (**~97% fewer tokens**).
 3. **Session isolation** → Separates cache per session ID, completely preventing hallucination after a chat reset.
 
 ### Layer 2: Hard Gate — File Read (Script Enforcement)
-If the agent attempts to skim or skip ZeroSkim entirely, the script immediately blocks execution:
+If the agent attempts to skim or skip zeroskim entirely, the script immediately blocks execution:
 ```text
 ❌ ZEROSKIM BLOCK: Skill not found in read-cache. Run zeroskim first.
  → Run: npx zeroskim send-recording-line
@@ -81,7 +81,7 @@ require_step_done("my-skill", "read-comments")
 
 ## ⚙️ Architecture & How It Works
 
-ZeroSkim works through a simple but highly effective **3-step hash-based read gate**:
+zeroskim works through a simple but highly effective **3-step hash-based read gate**:
 
 ```text
 ┌─────────────────────────────────────┐
@@ -113,7 +113,7 @@ ZeroSkim works through a simple but highly effective **3-step hash-based read ga
 
 ### 🔄 3 Reading States (Token Management)
 
-ZeroSkim drastically reduces token burn by determining exactly what the agent needs to see:
+zeroskim drastically reduces token burn by determining exactly what the agent needs to see:
 
 | State | Condition | Output | Token Usage |
 | :--- | :--- | :--- | :--- |
@@ -140,7 +140,7 @@ State files are session-specific (e.g. `.zeroskim-state-session-abc123.json`), e
 
 ## 📦 Installation
 
-ZeroSkim can be installed as a modern package or used as a standalone script.
+zeroskim can be installed as a modern package or used as a standalone script.
 
 ### Option A: Install as Package (Recommended)
 
@@ -149,9 +149,9 @@ ZeroSkim can be installed as a modern package or used as a standalone script.
 pip install zeroskim
 ```
 ```python
-from zeroskim import ZeroSkim, require_zeroskim
+from zeroskim import zeroskim, require_zeroskim
 
-zs = ZeroSkim(workspace_dir="/path/to/workspace")
+zs = zeroskim(workspace_dir="/path/to/workspace")
 result = zs.read("my-skill", session_id="abc123")
 
 # Enforce the 5-Minute Rule in your skill scripts
@@ -163,13 +163,13 @@ require_zeroskim("my-skill")
 npm install zeroskim
 ```
 ```javascript
-const { ZeroSkim, requireZeroskim } = require('zeroskim');
+const { zeroskim, requirezeroskim } = require('zeroskim');
 
-const zs = new ZeroSkim({ workspaceDir: '/path/to/workspace' });
+const zs = new zeroskim({ workspaceDir: '/path/to/workspace' });
 const result = zs.read('my-skill', { sessionId: 'abc123' });
 
 // Enforce the 5-Minute Rule in your skill scripts
-requireZeroskim('my-skill');
+requirezeroskim('my-skill');
 ```
 
 📖 Full API documentation: [`PACKAGE.md`](./PACKAGE.md)
@@ -180,8 +180,8 @@ If you prefer not to use package managers, you can download the core scripts dir
 
 ```bash
 # Download the main script and the gate enforcement
-curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim.py
-curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim_gate.py
+curl -O https://raw.githubusercontent.com/chunnytechmate/zeroskim/main/zeroskim.py
+curl -O https://raw.githubusercontent.com/chunnytechmate/zeroskim/main/zeroskim_gate.py
 ```
 
 Then, import the gate directly into your skill scripts:
@@ -196,10 +196,10 @@ require_zeroskim("your-skill-name", session_id=os.environ.get("OPENCLAW_SESSION_
 
 ### Option C: Docker Environments
 
-If your AI agent runs inside a Docker container, ZeroSkim is fully equipped to handle containerized environments via configuration variables.
+If your AI agent runs inside a Docker container, zeroskim is fully equipped to handle containerized environments via configuration variables.
 
 **1. Set Environment Variables:**
-Configure these variables in your `Dockerfile` or `docker-compose.yml` so ZeroSkim knows where to store its cache and locate scripts:
+Configure these variables in your `Dockerfile` or `docker-compose.yml` so zeroskim knows where to store its cache and locate scripts:
 
 ```yaml
 environment:
@@ -208,7 +208,7 @@ environment:
 ```
 
 **2. Ensure Volumes are Mounted:**
-Since ZeroSkim needs to read your SKILL.md files and persist its cache across container restarts, ensure your workspace is mounted as a volume:
+Since zeroskim needs to read your SKILL.md files and persist its cache across container restarts, ensure your workspace is mounted as a volume:
 
 ```yaml
 volumes:
@@ -221,20 +221,20 @@ volumes:
 Copy this snippet to your `AGENTS.md` or the agent's System Prompt to enforce strict discipline:
 
 ```markdown
-## ⚠️ ZeroSkim — Anti-Skimming Skill Read System
+## ⚠️ zeroskim — Anti-Skimming Skill Read System
 
 You MUST follow these rules. No exceptions. Skimming kills reliability.
 
-### Rule 1: Always use ZeroSkim before using any skill
+### Rule 1: Always use zeroskim before using any skill
 Before executing ANY skill, you must always run:
   zeroskim <skill_name> [--session <id>]
 
-- NEVER read SKILL.md directly using standard read tools — always route through ZeroSkim.
+- NEVER read SKILL.md directly using standard read tools — always route through zeroskim.
 - If the output includes full content, read it carefully and completely before proceeding.
 - If the output says UNCHANGED, you already have the required context in this session.
 
 ### Rule 2: The 5-Minute Enforcement
-You must have called ZeroSkim within the last 5 minutes to run a skill. If you wait too long, the script will BLOCK you. Re-run ZeroSkim to refresh your context.
+You must have called zeroskim within the last 5 minutes to run a skill. If you wait too long, the script will BLOCK you. Re-run zeroskim to refresh your context.
 
 ### Rule 3: No Shortcuts
 Skill scripts will hard-block execution if Rule 1 and Rule 2 are not met. No shortcuts. Run zeroskim first. Always.
@@ -298,7 +298,7 @@ requireStepDone('my-skill', 'read-comments');
 
 ## 🛡 Safety & Auto-Maintenance
 
-ZeroSkim is designed for robust, long-running agentic workflows that run for days or weeks unattended:
+zeroskim is designed for robust, long-running agentic workflows that run for days or weeks unattended:
 
 ### Atomic Writes
 State files are saved using the **atomic write pattern** (`tempfile.mkstemp()` → `os.replace()`). This two-step process guarantees that if the script crashes mid-write (OOM kill, signal, power loss), your state file will **never be corrupted** — you'll either have the old intact version or the new complete version, never a partial write.
@@ -307,7 +307,7 @@ State files are saved using the **atomic write pattern** (`tempfile.mkstemp()` �
 Context is strictly bound to session IDs (`.zeroskim-state-session-xyz789.json`). When a chat session resets, the cache is fresh — completely preventing hallucinations where the agent falsely claims to remember rules from a previous conversation.
 
 ### Auto Garbage Collection (GC)
-Every time ZeroSkim runs, it silently triggers `gc_stale_session_states(max_age_days=7)`, which prunes session state files older than 7 days. This keeps your workspace clean without manual maintenance, even with hundreds of concurrent sessions.
+Every time zeroskim runs, it silently triggers `gc_stale_session_states(max_age_days=7)`, which prunes session state files older than 7 days. This keeps your workspace clean without manual maintenance, even with hundreds of concurrent sessions.
 
 ### Path Traversal Protection
 Session IDs are strictly sanitized to `[a-zA-Z0-9_-]` only. Any characters outside this set are stripped, preventing arbitrary file writes or directory traversal attacks.
@@ -318,7 +318,7 @@ MIT
 
 ---
 
-# 🇹🇭 ZeroSkim (ภาษาไทย)
+# 🇹🇭 zeroskim (ภาษาไทย)
 
 ระบบป้องกัน AI Agent อ่านแบบลวกๆ (Skimming) — บังคับให้อ่านกฎ (SKILL.md) ให้จบก่อนเริ่มงานเสมอ เพื่อป้องกันความเสียหายร้ายแรงในระดับ Production
 
@@ -334,14 +334,14 @@ AI agent มักจะเจอปัญหาเดิมๆ ทุกคร�
 ## วิธีแก้ — ระบบป้องกัน 3 ชั้น
 
 ### ชั้นที่ 1: Soft Gate (สร้างวินัย)
-ZeroSkim ทำหน้าที่เป็นแคชอัจฉริยะ:
+zeroskim ทำหน้าที่เป็นแคชอัจฉริยะ:
 - **รันครั้งแรก**: พิมพ์เนื้อหาเต็ม + บันทึก SHA256 Hash
 - **ไฟล์ไม่เปลี่ยน**: พิมพ์สรุป 4 บรรทัด (ช่วยประหยัด Token ได้ถึง ~97%)
 - **แยกตาม Session**: ป้องกันการสับสนระหว่างแชทเก่าและแชทใหม่
 
 ### ชั้นที่ 2: Hard Gate — การอ่านไฟล์ (บล็อกในระดับโค้ด)
 ใช้ `require_zeroskim` ติดตั้งไว้ในทุก Skill Script:
-- **กฎ 15 นาที**: AI จะต้องรัน ZeroSkim มาไม่เกิน 15 นาทีก่อนรันงานจริง มิฉะนั้นสคริปต์จะ **บล็อกการทำงานทันที**
+- **กฎ 15 นาที**: AI จะต้องรัน zeroskim มาไม่เกิน 15 นาทีก่อนรันงานจริง มิฉะนั้นสคริปต์จะ **บล็อกการทำงานทันที**
 - **ไม่อนุญาตให้ใช้ทางลัด**: AI ต้องผ่านด่านตรวจก่อนเสมอ ไม่มีข้อยกเว้น
 
 ### ชั้นที่ 3: Hard Gate — การทำ Step (`require_step_done`)
@@ -362,7 +362,7 @@ require_step_done("my-skill", "read-comments")  # ชั้นที่ 3
 
 ## ⚙️ สถาปัตยกรรม (Architecture)
 
-ZeroSkim ทำงานผ่านระบบ **Hash-based Read Gate 3 ขั้นตอน**:
+zeroskim ทำงานผ่านระบบ **Hash-based Read Gate 3 ขั้นตอน**:
 
 ```text
 ┌─────────────────────────────────────┐
@@ -424,14 +424,14 @@ ZeroSkim ทำงานผ่านระบบ **Hash-based Read Gate 3 ขั
 Context ถูกแยกอย่างเข้มงวดตาม Session ID (`.zeroskim-state-session-xyz789.json`) เมื่อ session ใหม่เริ่มขึ้น cache จะว่างเปล่า — ป้องกัน AI ดึงความจำจาก session อื่นมาหลอนผสมกันอย่างเด็ดขาด
 
 ### Garbage Collection (GC)
-ทุกครั้งที่ ZeroSkim รัน จะลบไฟล์ State ที่เก่าเกิน 7 วันทิ้งอัตโนมัติ ไม่เปลืองพื้นที่ Workspace แม้จะมี session เป็นร้อยๆ
+ทุกครั้งที่ zeroskim รัน จะลบไฟล์ State ที่เก่าเกิน 7 วันทิ้งอัตโนมัติ ไม่เปลืองพื้นที่ Workspace แม้จะมี session เป็นร้อยๆ
 
 ### Path Traversal Protection
 Session ID ถูกกรองเหลือเฉพาะ `[a-zA-Z0-9_-]` เท่านั้น ป้องกันการเขียนไฟล์นอกเส้นทางที่กำหนด
 
 ## 📦 การติดตั้ง
 
-ZeroSkim รองรับการติดตั้งแบบ Package มาตรฐานเพื่อความสะดวกสูงสุด
+zeroskim รองรับการติดตั้งแบบ Package มาตรฐานเพื่อความสะดวกสูงสุด
 
 ### Python (ผ่าน pip)
 ```bash
@@ -447,20 +447,20 @@ require_zeroskim("my-skill")  # บล็อกทันทีถ้ายัง
 npm install zeroskim
 ```
 ```javascript
-const { requireZeroskim } = require('zeroskim');
-requireZeroskim('my-skill'); // บล็อกทันทีถ้ายังไม่ได้อ่าน
+const { requirezeroskim } = require('zeroskim');
+requirezeroskim('my-skill'); // บล็อกทันทีถ้ายังไม่ได้อ่าน
 ```
 
 💡 หากไม่ต้องการติดตั้งผ่าน Package คุณสามารถใช้ `curl` ดึงสคริปต์ไปวางในโปรเจกต์ได้เลย:
 
 ```bash
-curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim.py
-curl -O https://raw.githubusercontent.com/chunnytechmate/ZeroSkim/main/zeroskim_gate.py
+curl -O https://raw.githubusercontent.com/chunnytechmate/zeroskim/main/zeroskim.py
+curl -O https://raw.githubusercontent.com/chunnytechmate/zeroskim/main/zeroskim_gate.py
 ```
 
 ### Docker
 
-หาก AI Agent ของคุณรันอยู่ใน Docker Container สามารถตั้งค่า Environment Variables เพื่อให้ ZeroSkim ทำงานได้ทันที:
+หาก AI Agent ของคุณรันอยู่ใน Docker Container สามารถตั้งค่า Environment Variables เพื่อให้ zeroskim ทำงานได้ทันที:
 
 ```yaml
 environment:
@@ -477,20 +477,20 @@ volumes:
 คัดลอก Prompt ด้านล่างนี้ไปใส่ใน `AGENTS.md` หรือ System Prompt ของ AI เพื่อสร้างวินัยการอ่านที่เข้มงวด:
 
 ```markdown
-## ⚠️ ZeroSkim — ระบบ Anti-Skimming (คำสั่งบังคับ)
+## ⚠️ zeroskim — ระบบ Anti-Skimming (คำสั่งบังคับ)
 
 คุณต้องทำตามกฎเหล่านี้ทุกครั้ง ไม่มีข้อยกเว้น การอ่านแบบลวกๆ จะทำให้ระบบพัง
 
-### กฎข้อที่ 1: ต้องใช้ ZeroSkim ก่อนใช้ Skill เสมอ
+### กฎข้อที่ 1: ต้องใช้ zeroskim ก่อนใช้ Skill เสมอ
 ก่อนที่จะใช้งาน Skill ใดๆ คุณต้องรันคำสั่งนี้ก่อนเสมอ:
   zeroskim <skill_name> [--session <id>]
 
-- ห้ามอ่านไฟล์ SKILL.md โดยตรงเด็ดขาด — ต้องอ่านผ่าน ZeroSkim เท่านั้น
+- ห้ามอ่านไฟล์ SKILL.md โดยตรงเด็ดขาด — ต้องอ่านผ่าน zeroskim เท่านั้น
 - ถ้าผลลัพธ์แสดงเนื้อหาแบบเต็ม ให้คุณอ่านให้ละเอียดก่อนทำงาน
 - ถ้าผลลัพธ์แสดงคำว่า UNCHANGED แปลว่าคุณมีข้อมูลนี้ในความจำของ session นี้แล้ว ทำงานต่อได้เลย
 
 ### กฎข้อที่ 2: กฎ 5 นาที (The 5-Minute Enforcement)
-คุณต้องรัน ZeroSkim มาไม่เกิน 5 นาทีก่อนที่จะเรียกใช้ Skill หากคุณทิ้งช่วงนานเกินไป สคริปต์จะ BLOCK คุณทันที ให้คุณรัน ZeroSkim ใหม่อีกครั้งเพื่อรีเฟรชความจำ
+คุณต้องรัน zeroskim มาไม่เกิน 5 นาทีก่อนที่จะเรียกใช้ Skill หากคุณทิ้งช่วงนานเกินไป สคริปต์จะ BLOCK คุณทันที ให้คุณรัน zeroskim ใหม่อีกครั้งเพื่อรีเฟรชความจำ
 
 ### กฎข้อที่ 3: ห้ามแอบข้ามขั้นตอน
 Skill Scripts ถูกเขียนไว้ให้บล็อกการทำงานทันทีหากคุณไม่ทำตามกฎข้อ 1 และ 2 ไม่มีทางลัด คุณต้องรัน zeroskim ก่อนเสมอ!
